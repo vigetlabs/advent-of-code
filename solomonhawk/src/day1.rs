@@ -5,23 +5,22 @@ pub fn input_generator(input: &str) -> Vec<usize> {
 
 #[aoc(day1, part1)]
 pub fn part1(nums: &[usize]) -> usize {
-    count_increasing_seqs(nums.iter().cloned())
+    count_increasing_seqs(nums)
 }
 
 #[aoc(day1, part2)]
 pub fn part2(nums: &[usize]) -> usize {
-    count_increasing_seqs(nums.windows(3).map(|ns| ns.iter().sum()))
+    count_increasing_seqs(
+        &nums
+            .windows(3)
+            .map(|ns| ns.iter().sum())
+            .collect::<Vec<usize>>(),
+    )
 }
 
-pub fn count_increasing_seqs(nums: impl Iterator<Item = usize>) -> usize {
-    nums.fold((0, 0), |(count, last), current| {
-        if last > 0 && current > last {
-            return (count + 1, current);
-        }
-
-        return (count, current);
-    })
-    .0
+pub fn count_increasing_seqs(nums: &[usize]) -> usize {
+    nums.windows(2)
+        .fold(0, |acc, slice| acc + (slice[1] > slice[0]) as usize)
 }
 
 #[cfg(test)]
@@ -38,10 +37,7 @@ mod tests {
 
     #[test]
     fn increasing_seqs() {
-        assert_eq!(
-            count_increasing_seqs([199, 200, 208, 200].iter().cloned()),
-            2
-        );
+        assert_eq!(count_increasing_seqs(&[199, 200, 208, 200]), 2);
     }
 
     #[test]
