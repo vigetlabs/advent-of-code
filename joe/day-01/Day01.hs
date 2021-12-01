@@ -3,10 +3,13 @@ module Day01 where
 import Data.List (tails)
 
 windows :: Int -> [Int] -> [[Int]]
-windows x = filter (\ys -> length ys == x) . map (take x) . tails
+windows x = filter ((x ==) . length) . map (take x) . tails
 
 solve1 :: [Int] -> Int
-solve1 = length . filter (\ys ->  ys !! 1 > head ys) . windows 2
+solve1 = length . filter isGreater . windows 2
+  where
+    isGreater [x, y] = y > x
+    isGreater _ = error "wrong sized window"
 
 solve2 :: [Int] -> Int
 solve2 = solve1 . map sum . windows 3
