@@ -10,22 +10,16 @@ pub fn part1(nums: &[usize]) -> usize {
 
 #[aoc(day1, part2)]
 pub fn part2(nums: &[usize]) -> usize {
-    let iter = nums[0..nums.len() - 2]
-        .iter()
-        .enumerate()
-        .map(|(i, _)| &nums[i..i + 3])
-        .map(|ns| ns.iter().sum::<usize>());
-
-    count_increasing_seqs(iter)
+    count_increasing_seqs(nums.windows(3).map(|ns| ns.iter().sum()))
 }
 
 pub fn count_increasing_seqs(nums: impl Iterator<Item = usize>) -> usize {
-    nums.fold((0, 0), |(n, l), m| {
-        if l > 0 && m > l {
-            return (n + 1, m);
+    nums.fold((0, 0), |(count, last), current| {
+        if last > 0 && current > last {
+            return (count + 1, current);
         }
 
-        return (n, m);
+        return (count, current);
     })
     .0
 }
