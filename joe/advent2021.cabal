@@ -1,0 +1,96 @@
+cabal-version:      2.4
+name:               advent2021
+version:            0.1.0.0
+
+-- A short (one-line) description of the package.
+-- synopsis:
+
+-- A longer description of the package.
+-- description:
+
+-- A URL where users can report bugs.
+-- bug-reports:
+
+-- The license under which the package is released.
+-- license:
+author:             Joe Jackson
+maintainer:         cpmhjoe@gmail.com
+
+-- A copyright notice.
+-- copyright:
+-- category:
+extra-source-files: README.md
+
+common common-lang-options
+  default-language: Haskell2010
+  default-extensions: ImportQualifiedPost
+
+common common-exe-options
+  import: common-lang-options
+  build-depends:
+      base
+    , advent2021
+  hs-source-dirs: run
+
+library
+  import: common-lang-options
+  ghc-options: -Wall
+  build-depends:
+      base ^>=4.14
+  hs-source-dirs:
+      day-01
+--    , day-02
+--    , day-03
+--    , day-04
+--    , day-05
+--    , day-06
+--    , day-07
+--    , day-08
+--    , day-09
+--    , day-10
+--    , day-11
+--    , day-12
+--    , day-13
+--    , day-14
+--    , day-15
+--    , day-16
+--    , day-17
+--    , day-18
+--    , day-19
+--    , day-20
+--    , day-21
+--    , day-22
+--    , day-23
+--    , day-24
+--    , day-25
+  exposed-modules:
+      Day01
+--    , Day02
+--    , Day03
+--    , Day04
+--    , Day05
+--    , Day06
+--    , Day07
+--    , Day08
+--    , Day09
+--    , Day10
+--    , Day11
+--    , Day12
+--    , Day13
+--    , Day14
+--    , Day15
+--    , Day16
+--    , Day17
+--    , Day18
+--    , Day19
+--    , Day20
+--    , Day21
+--    , Day22
+--    , Day23
+--    , Day24
+--    , Day25
+
+executable day-01
+    import: common-exe-options
+    mixins: advent2021 (Day01 as Day)
+    main-is: Main.hs
