@@ -5,7 +5,10 @@ const __dirname = path.resolve();
 
 const day01 = () => {
   const input = fs.readFileSync(path.join(__dirname, "input.txt"), "utf-8");
-  console.log(input);
+  //console.log(input);
+
+  let inputArray = input.split("\n");
+  console.log(inputArray);
 };
 
 day01();
