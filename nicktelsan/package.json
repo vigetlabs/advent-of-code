@@ -1,0 +1,13 @@
+{
+  "name": "advent-of-code",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "type": "module",
+  "dependencies": {},
+  "devDependencies": {
+    "eslint": "^8.3.0",
+    "eslint-config-prettier": "^8.3.0",
+    "prettier": "^2.5.0"
+  }
+}
