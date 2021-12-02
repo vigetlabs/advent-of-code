@@ -6,6 +6,8 @@ output_file_path = "solution.txt"
 def write_solution(solution):
     with open(output_file_path, "w") as output_file:
         output_file.write(str(solution))
+        print(solution)
+        return solution
 
 def read_input_lines():
     with open(input_file_path, "r") as input_file:
