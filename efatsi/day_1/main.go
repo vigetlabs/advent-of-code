@@ -9,11 +9,10 @@ import (
 
 func main() {
   data, err := os.ReadFile("input.txt")
-  if err != nil {
-    panic(err)
-  }
+  check(err)
 
-  readings := strings.Split(string(data), "\n")
+  trimmed_data := strings.Trim(string(data), "\n ")
+  readings := strings.Split(string(trimmed_data), "\n")
 
   // First challenge
   readingInts := intsFromStrings(readings)
@@ -29,10 +28,9 @@ func intsFromStrings(readings []string) []int {
 
   for i := 0; i < len(readings); i++ {
     val, err := strconv.Atoi(readings[i])
+    check(err)
 
-    if (err == nil) {
-      intSlice = append(intSlice, val)
-    }
+    intSlice = append(intSlice, val)
   }
 
   return intSlice
@@ -47,6 +45,12 @@ func getWindows(readingInts []int) []int {
   }
 
   return windows
+}
+
+func check(e error) {
+  if e != nil {
+    panic(e)
+  }
 }
 
 func countIncreases(readings []int) int {
