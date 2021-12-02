@@ -17,6 +17,7 @@ func main() {
   commands := strings.Split(string(data), "\n")
   horizontal := 0
   depth := 0
+  aim := 0
 
   for i := 0; i < len(commands); i++ {
     command := commands[i]
@@ -29,10 +30,11 @@ func main() {
 
     if (strings.Contains(command, "forward")) {
       horizontal += number
+      depth += number * aim
     } else if (strings.Contains(command, "down")) {
-      depth += number
+      aim += number
     } else if (strings.Contains(command, "up")) {
-      depth -= number
+      aim -= number
     }
   }
 
