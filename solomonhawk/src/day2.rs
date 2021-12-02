@@ -1,10 +1,23 @@
+use std::error::Error;
+use std::fmt;
 use std::num::ParseIntError;
 use std::str::FromStr;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum ParseError {
     InvalidCmd,
     Parse(ParseIntError),
+}
+
+impl Error for ParseError {}
+
+impl fmt::Display for ParseError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            ParseError::InvalidCmd => write!(f, "Invalid command"),
+            ParseError::Parse(err) => write!(f, "Failed to parse command parameter: {}", err),
+        }
+    }
 }
 
 impl From<ParseIntError> for ParseError {
@@ -24,9 +37,8 @@ impl FromStr for Cmd {
     type Err = ParseError;
 
     fn from_str(s: &str) -> Result<Cmd, ParseError> {
-        let mut iter = s.split(" ");
-        let dir = iter.next().unwrap();
-        let amount = iter.next().unwrap().parse()?;
+        let (dir, amount) = s.split_once(" ").ok_or(ParseError::InvalidCmd)?;
+        let amount = amount.parse()?;
 
         match dir {
             "up" => Ok(Cmd::Up(amount)),
@@ -38,17 +50,14 @@ impl FromStr for Cmd {
 }
 
 #[aoc_generator(day2)]
-pub fn input_generator(input: &str) -> Vec<Cmd> {
-    input
-        .split("\n")
-        .map(|n| Cmd::from_str(n).unwrap())
-        .collect()
+pub fn input_generator(input: &str) -> Result<Vec<Cmd>, ParseError> {
+    input.split("\n").map(|n| n.parse()).collect()
 }
 
 #[aoc(day2, part1)]
 pub fn part1(commands: &[Cmd]) -> usize {
-    let mut h: usize = 0;
-    let mut d: usize = 0;
+    let mut h = 0;
+    let mut d = 0;
 
     for c in commands {
         match c {
@@ -63,9 +72,9 @@ pub fn part1(commands: &[Cmd]) -> usize {
 
 #[aoc(day2, part2)]
 pub fn part2(commands: &[Cmd]) -> usize {
-    let mut h: usize = 0;
-    let mut d: usize = 0;
-    let mut aim: usize = 0;
+    let mut h = 0;
+    let mut d = 0;
+    let mut aim = 0;
 
     for c in commands {
         match c {
@@ -87,11 +96,56 @@ mod tests {
 
     #[test]
     fn input() {
-        let input = input_generator("up 3\ndown 5\nforward 1");
+        let input = input_generator("up 3\ndown 5\nforward 1").expect("Input should be valid");
 
         assert_eq!(input[0], Cmd::Up(3));
         assert_eq!(input[1], Cmd::Down(5));
         assert_eq!(input[2], Cmd::Forward(1));
+    }
+
+    #[test]
+    fn foo_command_is_invalid() {
+        let input = input_generator("foo 3\ndown 5\nforward 1");
+
+        assert_eq!(input, Err(ParseError::InvalidCmd));
+    }
+
+    #[test]
+    fn up_without_param_is_invalid() {
+        let input = input_generator("up\ndown 5\nforward 1");
+
+        assert_eq!(input, Err(ParseError::InvalidCmd));
+    }
+
+    #[test]
+    fn empty_input_is_invalid() {
+        let input = input_generator("");
+
+        assert_eq!(input, Err(ParseError::InvalidCmd));
+    }
+
+    #[test]
+    fn invalid_command_format() {
+        let input = input_generator("");
+
+        assert_eq!(format!("{}", input.unwrap_err()), "Invalid command");
+    }
+
+    #[test]
+    fn up_with_letter_is_parse_error() {
+        let input = input_generator("up x\ndown 5\nforward 1");
+
+        assert!(matches!(input, Err(ParseError::Parse(_))));
+    }
+
+    #[test]
+    fn parse_error_format() {
+        let input = input_generator("up x\ndown 5\nforward 1");
+
+        assert_eq!(
+            format!("{}", input.unwrap_err()),
+            "Failed to parse command parameter: invalid digit found in string"
+        );
     }
 
     #[test]
