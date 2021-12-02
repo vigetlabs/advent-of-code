@@ -12,7 +12,12 @@ Other dependencies may evolve as I complete other exercises, but I'm trying to d
 
 These are the commands required to run each day's test
 
-Day 1:
+Day 1:  
+`cd day01`
 
-- Part 1: `node day01/countIncreases.js`
-- Part 2: `node day01/slidingCountIncreases.js`
+- Part 1:  
+  `node countIncreases.js`  
+  `go run countIncreases.go`
+- Part 2:  
+  `node slidingCountIncreases.js`  
+  `go run slidingCountIncreases.go`

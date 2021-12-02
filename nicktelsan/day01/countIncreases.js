@@ -4,7 +4,7 @@ import path from 'path'
 const __dirname = path.resolve()
 
 function main() {
-  const input = fs.readFileSync(path.join(__dirname, 'day01/input'), 'utf8')
+  const input = fs.readFileSync(path.join(__dirname, 'input'), 'utf8')
   const inputArray = input.split('\n')
 
   let increases = 0
