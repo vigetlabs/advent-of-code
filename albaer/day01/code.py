@@ -24,3 +24,6 @@ def check_increase(total, index):
 total_result = reduce(check_increase, range(len(input_lines)))
 
 write_solution(total_result)
+
+# TODO: Part 2
+# TODO: Use list comprehensions for funsies
