@@ -4,11 +4,20 @@ import path from "path";
 const __dirname = path.resolve();
 
 const day01 = () => {
-  const input = fs.readFileSync(path.join(__dirname, "input.txt"), "utf-8");
-  //console.log(input);
+  const input = fs
+    .readFileSync(path.join(__dirname, "day-01-input.txt"), "utf-8")
+    .split("\n")
+    .map(Number);
 
-  let inputArray = input.split("\n");
-  console.log(inputArray);
+  let count = 0;
+
+  for (let i = 0; i < input.length; i++) {
+    if (input[i] > input[i - 1]) {
+      count++;
+    }
+  }
+
+  console.log(count);
 };
 
 day01();
