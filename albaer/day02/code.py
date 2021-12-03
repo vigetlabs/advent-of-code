@@ -64,5 +64,6 @@ pprint(part_2_result)
 solution = str(part_1_result) + "\n" + str(part_2_result)
 write_solution(solution)
 
+# TODO: Clean this up! Find more python stuff.
 # TODO: Refactor things used every day into shareable code
 # (reading input and writing the solution)
