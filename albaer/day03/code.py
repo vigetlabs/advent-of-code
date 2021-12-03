@@ -14,22 +14,30 @@ def read_input_lines():
         return input_file.read().splitlines()
 
 input_lines = read_input_lines()
-number_of_bits = len(input_lines[0])
 
-pprint(number_of_bits)
-pprint(range(number_of_bits))
+def bin_str_to_int(bin_str):
+    return int(bin_str, 2)
 
-def most_common_at(n):
-    bits_at_position = [int(i[n]) for i in input_lines]
+def most_common_bit_at(lst, n):
+    bits_at_position = [int(i[n]) for i in lst]
     ones = sum(bits_at_position)
-    zeroes = len(input_lines) - ones
+    zeroes = len(lst) - ones
     return 1 if ones > zeroes else 0
 
-binary_digits = [str(most_common_at(i)) for i in range(number_of_bits)]
-binary_string = "".join(binary_digits)
-pprint(binary_string)
+def most_common_bits(lst):
+    number_of_bits = len(lst[0])
+    return [str(most_common_bit_at(lst, i)) for i in range(number_of_bits)]
 
-gamma = int(binary_string, 2)
+def bits_to_bin_str(bits):
+    return "".join(bits)
+
+def calculate_gamma(lst):
+    bits = most_common_bits(lst)
+    bin_str = bits_to_bin_str(bits)
+    return bin_str_to_int(bin_str)
+
+gamma = calculate_gamma(input_lines)
+
 pprint(gamma)
 
 # Part 1
