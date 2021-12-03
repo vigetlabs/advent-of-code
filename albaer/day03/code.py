@@ -24,7 +24,7 @@ def most_common_bit_at(lst, n):
     bits_at_position = [int(i[n]) for i in lst]
     ones = sum(bits_at_position)
     zeroes = len(lst) - ones
-    return 1 if ones > zeroes else 0
+    return 1 if ones >= zeroes else 0
 
 def most_common_bits(lst):
     number_of_bits = len(lst[0])
