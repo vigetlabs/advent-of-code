@@ -45,23 +45,19 @@ solve1 xs = toGamma gammaString * toEpsilon gammaString
 solve2 :: [String] -> Int
 solve2 xs = oxygenRating (zip xs xs) * co2Rating (zip xs xs)
   where
-    oxygenRating :: [(String, String)] -> Int
-    oxygenRating [] = error "no input"
-    oxygenRating [(y, _)] = toBinary $ map digitToInt y
-    oxygenRating ys = oxygenRating
+    rating _ [] = error "no input"
+    rating _ [(y, _)] = toBinary $ map digitToInt y
+    rating f ys = rating f
       $ map (second tail)
-      $ maximumBy (compare `on` length)
+      $ f (compare `on` length)
       $ groupBy ((==) `on` head . snd)
       $ sortBy (compare `on` snd) ys
 
+    oxygenRating :: [(String, String)] -> Int
+    oxygenRating = rating maximumBy
+
     co2Rating :: [(String, String)] -> Int
-    co2Rating [] = error "no input"
-    co2Rating [(y, _)] = toBinary $ map digitToInt y
-    co2Rating ys = co2Rating
-      $ map (second tail)
-      $ minimumBy (compare `on` length)
-      $ groupBy ((==) `on` head . snd)
-      $ sortBy (compare `on` snd) ys
+    co2Rating = rating minimumBy
 
 
 main :: IO ()
