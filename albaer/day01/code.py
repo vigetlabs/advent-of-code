@@ -20,12 +20,6 @@ def consecutive_groups(lst, n):
     return [lst[i:i+n] for i in range(len(lst)-n+1)]
 
 input_lines = read_input_lines()
-
-def check_increase(total, pair):
-    increase = int(pair[0]) < int(pair[1])
-    return total + 1 if increase else total
-
-total_result = reduce(check_increase, consecutive_groups(input_lines, 2), 0)
+total_result = sum([1 for pair in consecutive_groups(input_lines, 2) if int(pair[0]) < int(pair[1])])
 
 write_solution(total_result)
-
