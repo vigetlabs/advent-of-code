@@ -1,4 +1,4 @@
-from helpers import read_puzzle_input
+from helpers import read_integer_puzzle_input
 
 def day1_part1(depths):
     length = len(depths)
@@ -26,7 +26,7 @@ def day1_part2(depths):
   return sum
 
 if __name__ == '__main__':
-  depths = read_puzzle_input("dannybrown/input/day1.txt")
+  depths = read_integer_puzzle_input("dannybrown/input/day1.txt")
 
   print("Day 1 Part 1:", day1_part1(depths))
   print("Day 2 Part 2:", day1_part2(depths))
