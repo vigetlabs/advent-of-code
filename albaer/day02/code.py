@@ -15,18 +15,30 @@ def read_input_lines():
 
 input_lines = read_input_lines()
 
-starting_position = [0,0]
+# [depth, horizontal_position]
 
-def handle_change(change, position):
+position = [0,0]
+
+def handle_change(change, depth=0, horizontal_position=0):
     direction, distance = change.split()
     pprint("direction: " + direction)
     pprint("distance: " + distance)
+    match direction:
+        case "down":
+            return [depth + int(distance), horizontal_position]
+        case "up":
+            return[depth - int(distance), horizontal_position]
+        case "forward":
+            return [depth, horizontal_position + int(distance)]
+
 
 for change in input_lines:
-  handle_change(change, starting_position)
+  position = handle_change(change, position[0], position[1])
+  pprint(position)
 
+solution = position[0] * position[1]
 
-write_solution(total_result)
+write_solution(solution)
 
 # TODO: Refactor things used every day into shareable code
 # (reading input anf writing the solution)
