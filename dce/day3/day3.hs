@@ -2,8 +2,7 @@ import Data.Char
 import System.IO
 
 bitsToDec :: [Int] -> Int
-bitsToDec [i] = i
-bitsToDec (i : is) = (bitsToDec is * 2) + i
+bitsToDec = foldl (\sum i -> sum * 2 + i) 0
 
 bitCount :: Int -> (Int, Int) -> [Int] -> (Int, Int)
 bitCount place (zeroes, ones) input =
@@ -14,16 +13,12 @@ bitCount place (zeroes, ones) input =
 moreCommonBit :: [[Int]] -> Int -> Int
 moreCommonBit inputs place =
     let (zeroes, ones) = foldl (bitCount place) (0, 0) inputs in
-    if zeroes > ones
-       then 0
-    else 1 
+    if zeroes > ones then 0 else 1
 
 lessCommonBit :: [[Int]] -> Int -> Int
 lessCommonBit inputs place =
     let (zeroes, ones) = foldl (bitCount place) (0, 0) inputs in
-    if zeroes > ones
-       then 1
-    else 0
+    if zeroes > ones then 1 else 0
 
 filterOxy :: [[Int]] -> Int -> [[Int]]
 filterOxy [input] _ = [input]
@@ -44,17 +39,17 @@ main = do
     let places = [0..(length (inputs !! 0) - 1)]
 
     let gammaBits = map (moreCommonBit inputs) places
-    let gamma = bitsToDec (reverse gammaBits)
+    let gamma = bitsToDec gammaBits
 
     let epsilonBits = map (lessCommonBit inputs) places
-    let epsilon = bitsToDec (reverse epsilonBits)
+    let epsilon = bitsToDec epsilonBits
 
     putStrLn ("Part 1: " ++ (show (gamma * epsilon)))
 
     let oxyBits = (foldl filterOxy inputs places) !! 0
-    let oxy = bitsToDec (reverse oxyBits)
+    let oxy = bitsToDec oxyBits
 
     let co2Bits = (foldl filterCo2 inputs places) !! 0
-    let co2 = bitsToDec (reverse co2Bits)
+    let co2 = bitsToDec co2Bits
 
     putStrLn ("Part 2: " ++ (show (oxy * co2)))
