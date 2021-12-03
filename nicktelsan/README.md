@@ -12,6 +12,16 @@ Other dependencies may evolve as I complete other exercises, but I'm trying to d
 
 These are the commands required to run each day's test
 
+Day 3:
+
+- Part 1:
+  `node day03/powerUsage.js`  
+  `go run day03/powerUsage.go`
+
+- Part 2:
+  `node day03/lifeSupport.js`  
+  `go run day03/lifeSupport.go`
+
 Day 2:
 
 - Part 1:  
