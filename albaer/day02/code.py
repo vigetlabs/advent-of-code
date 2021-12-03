@@ -1,3 +1,5 @@
+from pprint import pprint
+
 input_file_path = "input.txt"
 output_file_path = "solution.txt"
 
@@ -13,9 +15,15 @@ def read_input_lines():
 
 input_lines = read_input_lines()
 
-start = [0,0]
+starting_position = [0,0]
+
+def handle_change(change, position):
+    direction, distance = change.split()
+    pprint("direction: " + direction)
+    pprint("distance: " + distance)
 
 for change in input_lines:
+  handle_change(change, starting_position)
 
 
 write_solution(total_result)
