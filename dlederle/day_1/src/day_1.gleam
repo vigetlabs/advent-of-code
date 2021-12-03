@@ -1,19 +1,24 @@
 import gleam/list.{at, index_fold}
 import gleam/result.{unwrap}
 import gleam/io.{debug}
+import gleam/string.{split}
+import gleam/int.{parse}
 
 pub external type Posix
 
-pub external fn read(filename) -> Result(content, error) = "Elixir.File" "read"
+pub external fn random_float() -> Float = "rand" "uniform"
+pub external fn read_file(String) -> Result(String, a) = "file" "read_file"
 
 const max = 1_000_000_000 // I can't find the max integer size
 
 pub fn main() {
   "input.txt"
-  |> read()
-  |> result.map(fn(el) {
-    debug(el)
-  })
+  |> read_file()
+  |> unwrap(or: "")
+  |> split(on: "\n")
+  |> list.map(parse)
+  |> result.values()
+  |> count_increases()
 }
 
 pub fn count_increases(number_list: List(Int)) -> Int {
