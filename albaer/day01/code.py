@@ -19,7 +19,8 @@ def read_input_lines():
 def consecutive_groups(lst, n):
     return [lst[i:i+n] for i in range(len(lst)-n+1)]
 
-input_lines = read_input_lines()
-total_result = sum([1 for pair in consecutive_groups(input_lines, 2) if int(pair[0]) < int(pair[1])])
+inputs_as_integers = [int(i) for i in read_input_lines()]
+pairs = consecutive_groups(inputs_as_integers, 2)
+total_result = sum([1 for pair in pairs if pair[0] < pair[1]])
 
 write_solution(total_result)
