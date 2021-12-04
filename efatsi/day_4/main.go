@@ -4,22 +4,24 @@ import (
   "fmt"
   "os"
   "strings"
-  // "regexp"
   "strconv"
+  // "regexp"
 
   "day_4/board"
 )
 
 func main() {
-  data, _ := os.ReadFile("example.txt")
-  // data, _ := os.ReadFile("input.txt")
+  // data, _ := os.ReadFile("example_mine.txt")
+  // data, _ := os.ReadFile("example.txt")
+  data, _ := os.ReadFile("input.txt")
 
   trimmed_data := strings.Trim(string(data), "\n ")
   board_inputs := strings.Split(trimmed_data, "\n")
 
   boards := make([]board.Board, 0)
-  // commands := board_inputs[0]
+  commands := strings.Split(board_inputs[0], ",")
 
+  // Load in board data
   for i := 1; i < len(board_inputs); i++ {
     input_line := board_inputs[i]
 
@@ -41,7 +43,25 @@ func main() {
     }
   }
 
-  fmt.Println(boards)
+  solvePartOne(boards, commands)
+}
 
-  // boards created, now process commands...
+func solvePartOne(boards []board.Board, commands []string)  {
+  for _, command := range commands {
+    value, _ := strconv.Atoi(command)
+    fmt.Println("checking ", value)
+
+    for i := 0; i < len(boards); i++ {
+      board := &boards[i]
+      board.CheckValue(value)
+      if board.HasBingo() {
+        fmt.Println("got a winner: ")
+        board.Print()
+
+        fmt.Println("Unmatched count:", board.UnmatchedCount())
+        fmt.Println("Value: ", board.UnmatchedCount() * value)
+        panic("stop")
+      }
+    }
+  }
 }
