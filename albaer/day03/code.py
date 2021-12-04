@@ -1,20 +1,14 @@
 from pprint import pprint
 
-input_file_path = "input.txt"
-output_file_path = "solution.txt"
-
-def write_solution(solution):
+def write_solution(solution, output_file_path="solution.txt"):
     with open(output_file_path, "w") as output_file:
         output_file.write(str(solution))
         print(solution)
         return solution
 
-def read_input_lines():
+def read_input_lines(input_file_path="input.txt"):
     with open(input_file_path, "r") as input_file:
         return input_file.read().splitlines()
-
-input_lines = read_input_lines()
-number_of_bits = len(input_lines[0])
 
 # Part 1
 
@@ -28,6 +22,7 @@ def most_common_bit_at(lst, n):
     return 1 if ones >= zeroes else 0
 
 def most_common_bits(lst):
+    number_of_bits = len(lst[0])
     return [str(most_common_bit_at(lst, i)) for i in range(number_of_bits)]
 
 def least_common_bits(lst):
@@ -57,7 +52,6 @@ def calculate_power_consumption(lst):
     epsilon = calculate_epsilon(lst)
     return gamma * epsilon
 
-part_1_result = calculate_power_consumption(input_lines)
 
 # Part 2
 
@@ -68,6 +62,7 @@ def filter_by_most_common_bit_at(lst, n):
     return [i for i in lst if i[n] == str(most_common_n_bit)]
 
 def find_ox_gen_rating(lst, index):
+    number_of_bits = len(lst[0])
     if len(lst) == 1:
         return lst[0]
     elif index > number_of_bits - 1:
@@ -93,6 +88,7 @@ def filter_by_least_common_bit_at(lst, n):
     return [i for i in lst if i[n] == str(least_common_n_bit)]
 
 def find_co2_scrubber_rating(lst, index):
+    number_of_bits = len(lst[0])
     if len(lst) == 1:
         return lst[0]
     elif index > number_of_bits - 1:
@@ -105,16 +101,16 @@ def calculate_co2_scrubber_rating(lst, index):
     bin_str = find_co2_scrubber_rating(input_lines, 0)
     return bin_str_to_int(bin_str)
 
-co2_scrubber_rating = calculate_co2_scrubber_rating(input_lines, 0)
-
 def calculate_life_support_rating(lst):
     ox_gen_rating = calculate_ox_gen_rating(lst, 0)
     co2_scrubber_rating = calculate_co2_scrubber_rating(lst, 0)
     return ox_gen_rating * co2_scrubber_rating
 
-part_2_result = calculate_life_support_rating(input_lines)
-
 # Write solution
 
-solution = str(part_1_result) + "\n" + str(part_2_result)
-write_solution(solution)
+if __name__ == '__main__':
+    input_lines = read_input_lines()
+    part_1_result = calculate_power_consumption(input_lines)
+    part_2_result = calculate_life_support_rating(input_lines)
+    solution = str(part_1_result) + "\n" + str(part_2_result)
+    write_solution(solution)
