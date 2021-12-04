@@ -21,23 +21,14 @@ func main() {
   trimmed_data := strings.Trim(string(data), "\n ")
   readings := strings.Split(trimmed_data, "\n")
 
-  // Assemble data into a slice of arrays of positioned bits
-  // Slice: useful for making functions that operate on the dataset able to take
-  //   slices of dynamic length
-  array_of_arrays := make([][readings_count]int, reading_length)
+  positioned_bits := assemblePositionedBits(readings)
 
-  for i := 0; i < readings_count; i++ {
-    for j := 0; j < reading_length; j++ {
-      array_of_arrays[j][i] = parseReading(readings[i][j:j+1])
-    }
-  }
-
-  solvePartOne(array_of_arrays)
+  solvePartOne(positioned_bits)
 }
 
-func solvePartOne(array_of_arrays [][readings_count]int) {
+func solvePartOne(positioned_bits [][readings_count]int) {
   // Part 1 solution
-  most_common_bits, least_common_bits := getMostCommon(array_of_arrays)
+  most_common_bits, least_common_bits := getMostCommon(positioned_bits)
   most_common_bit_string := arrayToString(most_common_bits)
   least_common_bit_string := arrayToString(least_common_bits)
 
@@ -48,14 +39,29 @@ func solvePartOne(array_of_arrays [][readings_count]int) {
   fmt.Println(gamma * epsilon)
 }
 
-func getMostCommon(array_of_arrays [][readings_count]int) ([]int, []int) {
-  most_common_bits := make([]int, len(array_of_arrays))
-  least_common_bits := make([]int, len(array_of_arrays))
+func assemblePositionedBits(readings []string) [][readings_count]int {
+  // Assemble data into a slice of arrays of positioned bits
+  // Slice: useful for making functions that operate on the dataset able to take
+  //   slices of dynamic length
+  positioned_bits := make([][readings_count]int, reading_length)
 
-  for j := 0; j < len(array_of_arrays); j++ {
+  for i := 0; i < readings_count; i++ {
+    for j := 0; j < reading_length; j++ {
+      positioned_bits[j][i], _ = strconv.Atoi(readings[i][j:j+1])
+    }
+  }
+
+  return positioned_bits
+}
+
+func getMostCommon(positioned_bits [][readings_count]int) ([]int, []int) {
+  most_common_bits := make([]int, len(positioned_bits))
+  least_common_bits := make([]int, len(positioned_bits))
+
+  for j := 0; j < len(positioned_bits); j++ {
     sum := 0
     for i := 0; i < readings_count; i++ {
-      sum += array_of_arrays[j][i]
+      sum += positioned_bits[j][i]
     }
 
     if sum >= (readings_count / 2) {
