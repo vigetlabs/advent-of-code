@@ -7,28 +7,25 @@ import (
   "strconv"
 )
 
-// const readings_count = 1000
-// const reading_length = 12
-const readings_count = 12
-const reading_length = 5
+// const reading_length = 5
+const reading_length = 12
 
 func main() {
-  // data, err := os.ReadFile("input.txt")
-  data, err := os.ReadFile("example.txt")
-  if err != nil {
-    panic(err)
-  }
+  // data, err := os.ReadFile("example.txt")
+  data, err := os.ReadFile("input.txt")
+  check(err)
+
   trimmed_data := strings.Trim(string(data), "\n ")
   readings := strings.Split(trimmed_data, "\n")
 
-  positioned_bits := assemblePositionedBits(readings)
-
-  solvePartOne(positioned_bits)
+  solvePartOne(readings)
+  solvePartTwo(readings)
 }
 
-func solvePartOne(positioned_bits [][]int) {
-  // Part 1 solution
+func solvePartOne(readings []string) {
+  positioned_bits := assemblePositionedBits(readings)
   most_common_bits, least_common_bits := getMostCommon(positioned_bits)
+
   most_common_bit_string := arrayToString(most_common_bits)
   least_common_bit_string := arrayToString(least_common_bits)
 
@@ -39,10 +36,58 @@ func solvePartOne(positioned_bits [][]int) {
   fmt.Println(gamma * epsilon)
 }
 
+func solvePartTwo(readings []string) {
+  oxygen_reading := findOxygenReading(readings, 0)
+  co2_reading := findCo2Reading(readings, 0)
+
+  oxygen, err := strconv.ParseInt(oxygen_reading, 2, 64)
+  co2, err := strconv.ParseInt(co2_reading, 2, 64)
+  check(err)
+
+  fmt.Println(oxygen * co2)
+}
+
+func findOxygenReading(readings []string, index int) string {
+  positioned_bits := assemblePositionedBits(readings)
+  most_common_bits, _ := getMostCommon(positioned_bits)
+  most_common_bit := strconv.Itoa(most_common_bits[index])
+
+  filtered_set := make([]string, 0)
+  for _, reading := range readings {
+    if (reading[index:index+1] == most_common_bit) {
+      filtered_set = append(filtered_set, reading)
+    }
+  }
+
+  if len(filtered_set) == 1 {
+    return filtered_set[0]
+  } else {
+    return findOxygenReading(filtered_set, index + 1)
+  }
+}
+
+// identical to findOxygenReading, but takes least instead of most
+func findCo2Reading(readings []string, index int) string {
+  positioned_bits := assemblePositionedBits(readings)
+  _, least_common_bits := getMostCommon(positioned_bits)
+  least_common_bit := strconv.Itoa(least_common_bits[index])
+
+  filtered_set := make([]string, 0)
+
+  for _, reading := range readings {
+    if (reading[index:index+1] == least_common_bit) {
+      filtered_set = append(filtered_set, reading)
+    }
+  }
+
+  if len(filtered_set) == 1 {
+    return filtered_set[0]
+  } else {
+    return findCo2Reading(filtered_set, index + 1)
+  }
+}
+
 func assemblePositionedBits(readings []string) [][]int {
-  // Assemble data into a slice of arrays of positioned bits
-  // Slice: useful for making functions that operate on the dataset able to take
-  //   slices of dynamic length
   positioned_bits := make([][]int, reading_length)
 
   for j := 0; j < reading_length; j++ {
@@ -57,6 +102,8 @@ func assemblePositionedBits(readings []string) [][]int {
 }
 
 func getMostCommon(positioned_bits [][]int) ([]int, []int) {
+  readings_count := len(positioned_bits[0])
+
   most_common_bits := make([]int, len(positioned_bits))
   least_common_bits := make([]int, len(positioned_bits))
 
@@ -66,7 +113,7 @@ func getMostCommon(positioned_bits [][]int) ([]int, []int) {
       sum += positioned_bits[j][i]
     }
 
-    if sum >= (readings_count / 2) {
+    if float64(sum) >= (float64(readings_count) / 2) {
       most_common_bits[j] = 1
       least_common_bits[j] = 0
     } else {
