@@ -2,7 +2,6 @@ use std::fmt;
 
 #[derive(Debug, Default, Clone, PartialEq)]
 pub struct Bingo {
-    pick_index: usize,
     picks: Vec<usize>,
     boards: Vec<Board>,
     winners: Vec<Board>,
@@ -25,40 +24,10 @@ pub struct Space {
 }
 
 impl Bingo {
-    fn play_until_winner(&mut self) -> &mut Bingo {
-        while self.winners.len() == 0 {
-            if self.pick_index == self.picks.len() {
-                println!("Ran out of picks!");
-                break;
-            }
-
-            let pick = self.picks[self.pick_index];
-
-            for board in &mut self.boards {
-                mark_space(board, pick);
-                // println!("{}\n", format!("{}", board));
-                // println!("------------");
-            }
-
+    fn play(&mut self) -> &mut Bingo {
+        for pick in self.picks.clone() {
+            self.mark_spaces(pick);
             self.check_winners(pick);
-
-            self.pick_index += 1;
-        }
-
-        self
-    }
-
-    fn play_all_picks(&mut self) -> &mut Bingo {
-        while self.pick_index < self.picks.len() {
-            let pick = self.picks[self.pick_index];
-
-            for board in &mut self.boards {
-                mark_space(board, pick);
-            }
-
-            self.check_winners(pick);
-
-            self.pick_index += 1;
         }
 
         self
@@ -78,6 +47,20 @@ impl Bingo {
                     self.winners.push(board.clone());
 
                     break;
+                }
+            }
+        }
+    }
+
+    fn mark_spaces(&mut self, pick: usize) {
+        for board in &mut self.boards {
+            if board.winner {
+                continue;
+            }
+
+            for space in &mut board.spaces {
+                if space.value == pick {
+                    space.picked = true;
                 }
             }
         }
@@ -110,14 +93,6 @@ impl fmt::Display for Board {
         }
 
         write!(f, "{}", display_str)
-    }
-}
-
-fn mark_space(board: &mut Board, pick: usize) {
-    for space in &mut board.spaces {
-        if space.value == pick {
-            space.picked = true;
-        }
     }
 }
 
@@ -189,7 +164,7 @@ pub fn input_generator(input: &str) -> Bingo {
 pub fn part1(bingo: &Bingo) -> usize {
     let mut bingo = bingo.clone();
 
-    bingo.play_until_winner();
+    bingo.play();
 
     if let Some(winner) = &bingo.winners.first() {
         sum_unmarked_spaces(winner) * winner.last_pick.expect("Winning board missing last_pick")
@@ -203,7 +178,7 @@ pub fn part1(bingo: &Bingo) -> usize {
 pub fn part2(bingo: &Bingo) -> usize {
     let mut bingo = bingo.clone();
 
-    bingo.play_all_picks();
+    bingo.play();
 
     if let Some(last_winner) = &bingo.winners.last() {
         sum_unmarked_spaces(last_winner)
