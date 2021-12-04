@@ -1,4 +1,3 @@
-from functools import reduce
 from pprint import pprint
 
 input_file_path = "input.txt"
