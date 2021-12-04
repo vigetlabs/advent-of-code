@@ -43,7 +43,8 @@ func main() {
     }
   }
 
-  solvePartOne(boards, commands)
+  // solvePartOne(boards, commands)
+  solvePartTwo(boards, commands)
 }
 
 func solvePartOne(boards []board.Board, commands []string)  {
@@ -64,4 +65,45 @@ func solvePartOne(boards []board.Board, commands []string)  {
       }
     }
   }
+}
+
+func solvePartTwo(boards []board.Board, commands []string)  {
+  have_seen := make([]int, 0)
+
+  for _, command := range commands {
+    value, _ := strconv.Atoi(command)
+    fmt.Println("checking ", value)
+
+
+    for i := 0; i < len(boards); i++ {
+      if contains(have_seen, i) {
+        continue
+      }
+
+      board := &boards[i]
+      board.CheckValue(value)
+      if board.HasBingo() {
+        fmt.Println("got a winner: ", i)
+        have_seen = append(have_seen, i)
+
+        if len(have_seen) == len(boards) {
+          fmt.Println("This was the last!")
+          board.Print()
+          fmt.Println("Unmatched count:", board.UnmatchedCount())
+          fmt.Println("Value: ", board.UnmatchedCount() * value)
+          panic("stop")
+        }
+      }
+    }
+  }
+}
+
+func contains(slice []int, index int) bool {
+  for _, v := range slice {
+    if v == index {
+      return true
+    }
+  }
+
+  return false
 }
