@@ -199,11 +199,8 @@ pub fn part2(bingo: &Bingo) -> usize {
 
     bingo.play();
 
-    if let Some(last_winner) = &bingo.winners.last() {
-        sum_unmarked_spaces(last_winner)
-            * last_winner
-                .last_pick
-                .expect("Winning board missing last_pick")
+    if let Some(winner) = &bingo.winners.last() {
+        sum_unmarked_spaces(winner) * winner.last_pick.expect("Winning board missing last_pick")
     } else {
         println!("A winner was not found!");
         0
