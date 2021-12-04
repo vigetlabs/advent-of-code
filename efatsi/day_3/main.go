@@ -26,7 +26,7 @@ func main() {
   solvePartOne(positioned_bits)
 }
 
-func solvePartOne(positioned_bits [][readings_count]int) {
+func solvePartOne(positioned_bits [][]int) {
   // Part 1 solution
   most_common_bits, least_common_bits := getMostCommon(positioned_bits)
   most_common_bit_string := arrayToString(most_common_bits)
@@ -39,14 +39,16 @@ func solvePartOne(positioned_bits [][readings_count]int) {
   fmt.Println(gamma * epsilon)
 }
 
-func assemblePositionedBits(readings []string) [][readings_count]int {
+func assemblePositionedBits(readings []string) [][]int {
   // Assemble data into a slice of arrays of positioned bits
   // Slice: useful for making functions that operate on the dataset able to take
   //   slices of dynamic length
-  positioned_bits := make([][readings_count]int, reading_length)
+  positioned_bits := make([][]int, reading_length)
 
-  for i := 0; i < readings_count; i++ {
-    for j := 0; j < reading_length; j++ {
+  for j := 0; j < reading_length; j++ {
+    positioned_bits[j] = make([]int, len(readings))
+
+    for i := 0; i < len(readings); i++ {
       positioned_bits[j][i], _ = strconv.Atoi(readings[i][j:j+1])
     }
   }
@@ -54,7 +56,7 @@ func assemblePositionedBits(readings []string) [][readings_count]int {
   return positioned_bits
 }
 
-func getMostCommon(positioned_bits [][readings_count]int) ([]int, []int) {
+func getMostCommon(positioned_bits [][]int) ([]int, []int) {
   most_common_bits := make([]int, len(positioned_bits))
   least_common_bits := make([]int, len(positioned_bits))
 
