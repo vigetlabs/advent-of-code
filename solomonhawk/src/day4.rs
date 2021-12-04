@@ -1,4 +1,6 @@
+use std::error::Error;
 use std::fmt;
+use std::str::FromStr;
 
 #[derive(Debug, Default, Clone, PartialEq)]
 pub struct Bingo {
@@ -33,6 +35,20 @@ impl Bingo {
         self
     }
 
+    fn mark_spaces(&mut self, pick: usize) {
+        for board in &mut self.boards {
+            if board.winner {
+                continue;
+            }
+
+            for space in &mut board.spaces {
+                if space.value == pick {
+                    space.picked = true;
+                }
+            }
+        }
+    }
+
     fn check_winners(&mut self, pick: usize) {
         for board in &mut self.boards {
             if board.winner {
@@ -51,19 +67,42 @@ impl Bingo {
             }
         }
     }
+}
 
-    fn mark_spaces(&mut self, pick: usize) {
-        for board in &mut self.boards {
-            if board.winner {
-                continue;
-            }
+#[derive(Debug)]
+pub struct BoardParseError;
 
-            for space in &mut board.spaces {
-                if space.value == pick {
-                    space.picked = true;
-                }
-            }
-        }
+impl Error for BoardParseError {}
+
+impl fmt::Display for BoardParseError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Board parse error")
+    }
+}
+
+impl FromStr for Board {
+    type Err = BoardParseError;
+
+    fn from_str(board: &str) -> Result<Board, Self::Err> {
+        let spaces = board
+            .split("\n")
+            .enumerate()
+            .flat_map(|(y, row)| {
+                row.split_whitespace()
+                    .enumerate()
+                    .map(move |(x, space)| Space {
+                        value: space.parse().unwrap(),
+                        picked: false,
+                        row: y,
+                        col: x,
+                    })
+            })
+            .collect();
+        Ok(Board {
+            spaces,
+            winner: false,
+            last_pick: None,
+        })
     }
 }
 
@@ -134,27 +173,7 @@ pub fn input_generator(input: &str) -> Bingo {
 
     bingo.boards = boards
         .split("\n\n")
-        .map(|board| {
-            let spaces = board
-                .split("\n")
-                .enumerate()
-                .flat_map(|(y, row)| {
-                    row.split_whitespace()
-                        .enumerate()
-                        .map(move |(x, space)| Space {
-                            value: space.parse().unwrap(),
-                            picked: false,
-                            row: y,
-                            col: x,
-                        })
-                })
-                .collect();
-            Board {
-                spaces,
-                winner: false,
-                last_pick: None,
-            }
-        })
+        .map(|board| board.parse().expect("Failed to parse board"))
         .collect();
 
     bingo
