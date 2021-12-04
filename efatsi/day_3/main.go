@@ -124,14 +124,6 @@ func arrayToString(slice []int) string {
   return to_return
 }
 
-func parseReading(bit string) int {
-  if (bit == "1") {
-    return 1
-  } else {
-    return 0
-  }
-}
-
 func check(e error) {
   if e != nil {
     panic(e)
