@@ -214,8 +214,7 @@ fn sum_unmarked_spaces(board: &Board) -> usize {
     board
         .spaces
         .iter()
-        .filter(|s| !s.picked)
-        .map(|s| s.value)
+        .filter_map(|s| if !s.picked { Some(s.value) } else { None })
         .sum()
 }
 
