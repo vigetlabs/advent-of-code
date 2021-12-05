@@ -7,12 +7,18 @@ import (
   "strconv"
 )
 
+const debug = false
 const dimension = 1000
+const filePath = "input.txt"
+
+// const debug = true
+// const dimension = 10
+// const filePath = "example.txt"
+
 var coordinates [dimension][dimension]int
 
 func main() {
-  // data, _ := os.ReadFile("example.txt")
-  data, _ := os.ReadFile("input.txt")
+  data, _ := os.ReadFile(filePath)
 
   trimmed_data := strings.Trim(string(data), "\n ")
   vent_inputs := strings.Split(trimmed_data, "\n")
@@ -28,6 +34,8 @@ func main() {
 }
 
 func recordVent(start string, end string) {
+  if debug { fmt.Println(start, " - ", end) }
+
   start_coordinates := strings.Split(start, ",")
   end_coordinates := strings.Split(end, ",")
 
@@ -36,26 +44,47 @@ func recordVent(start string, end string) {
   x2, _ := strconv.Atoi(end_coordinates[0])
   y2, _ := strconv.Atoi(end_coordinates[1])
 
-  // only record vent if straight line: x1==x2 or y1==y2
-  if x1 != x2 && y1 != y2 {
-    return
-  }
-
   if x1 == x2 {
     min, max := getMinMax(y1, y2)
     for i := min; i <= max; i++ {
       coordinates[x1][i]++
     }
-  }
-
-  if y1 == y2 {
+  } else if y1 == y2 {
     min, max := getMinMax(x1, x2)
     for i := min; i <= max; i++ {
       coordinates[i][y1]++
     }
+  } else {
+    // diagonal line
+    // calculate directions
+    xDirection := 1
+    if x1 > x2 {
+      xDirection = -1
+    }
+
+    yDirection := 1
+    if y1 > y2 {
+      yDirection = -1
+    }
+
+    // calculate steps to take
+    minX, maxX := getMinMax(x1, x2)
+    steps := maxX - minX
+
+    if debug {
+      fmt.Println("xDirection: ", xDirection)
+      fmt.Println("yDirection: ", yDirection)
+      fmt.Println("steps: ", steps)
+    }
+
+    for i := 0; i <= steps; i++ {
+      x := x1 + (i * xDirection)
+      y := y1 + (i * yDirection)
+      coordinates[x][y]++
+    }
   }
 
-  // printCoordinates()
+  if debug { printCoordinates() }
 }
 
 func countOverlaps() {
