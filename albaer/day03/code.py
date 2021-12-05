@@ -67,6 +67,8 @@ def least_common_bit_at(lst, n):
     ones, zeroes = count_bits_at(lst, n)
     return "1" if ones < zeroes else "0"
 
+# Part 2
+
 def filter_by_prevalence_at(lst, position, prevalence):
     match prevalence:
         case "highest":
@@ -75,9 +77,6 @@ def filter_by_prevalence_at(lst, position, prevalence):
             desired_bit = least_common_bit_at(lst, position)
 
     return [i for i in lst if i[position] == desired_bit]
-
-
-# Part 2
 
 def find_by_prevalence(lst, index, prevalence):
     number_of_bits = len(lst[0])
