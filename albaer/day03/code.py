@@ -33,26 +33,6 @@ def least_common_bits(lst):
     most_common = most_common_bits(lst)
     return reverse_bits(most_common)
 
-def calculate_gamma(lst):
-    bits = most_common_bits(lst)
-    return bits_to_int(bits)
-
-def calculate_epsilon(lst):
-    bits = least_common_bits(lst)
-    return bits_to_int(bits)
-
-def calculate_power_consumption(lst):
-    gamma = calculate_gamma(lst)
-    epsilon = calculate_epsilon(lst)
-    return gamma * epsilon
-
-# def find_by_prevalence(lst, prevalence, tie_goes_to):
-#     bits_at_position = [int(i[n]) for i in lst]
-#     ones = lst.count()
-#     zeroes = len(lst) - ones
-#     match prevalence:
-#         case "highest":
-
 def count_bits_at(lst, n):
     bits_at_position = [i[n] for i in lst]
     ones = bits_at_position.count("1")
@@ -67,37 +47,54 @@ def least_common_bit_at(lst, n):
     ones, zeroes = count_bits_at(lst, n)
     return "1" if ones < zeroes else "0"
 
-# Part 2
-
-def filter_by_prevalence_at(lst, position, prevalence):
+def get_bit_by_prevalence_at(lst, prevalence, position):
+    ones, zeroes = count_bits_at(lst, position)
     match prevalence:
         case "highest":
-            desired_bit = most_common_bit_at(lst, position)
+            return "1" if ones >= zeroes else "0"
         case "lowest":
-            desired_bit = least_common_bit_at(lst, position)
+            return "1" if ones < zeroes else "0"
+# Part 1
 
+def calculate_gamma(lst):
+    bits = most_common_bits(lst)
+    return bits_to_int(bits)
+
+def calculate_epsilon(lst):
+    bits = least_common_bits(lst)
+    return bits_to_int(bits)
+
+def calculate_power_consumption(lst):
+    gamma = calculate_gamma(lst)
+    epsilon = calculate_epsilon(lst)
+    return gamma * epsilon
+
+# Part 2
+
+def filter_by_prevalence_at(lst, prevalence, position):
+    desired_bit = get_bit_by_prevalence_at(lst, prevalence, position)
     return [i for i in lst if i[position] == desired_bit]
 
-def find_by_prevalence(lst, index, prevalence):
+def find_by_prevalence(lst, prevalence, index=0):
     number_of_bits = len(lst[0])
     if len(lst) == 1:
         return lst[0]
     elif index > number_of_bits - 1:
         return "ERROR"
     else:
-        new_lst = filter_by_prevalence_at(lst, index, prevalence)
-        return find_by_prevalence(new_lst, index + 1, prevalence)
+        new_lst = filter_by_prevalence_at(lst, prevalence, index)
+        return find_by_prevalence(new_lst, prevalence, index + 1)
 
 # Oxygen Generator Rating
 
 def calculate_ox_gen_rating(lst):
-    bin_str = find_by_prevalence(lst, 0, "highest")
+    bin_str = find_by_prevalence(lst, "highest")
     return bin_str_to_decimal(bin_str)
 
 # C02 Scrubber Rating
 
 def calculate_co2_scrubber_rating(lst):
-    bin_str = find_by_prevalence(lst, 0, "lowest")
+    bin_str = find_by_prevalence(lst, "lowest")
     return bin_str_to_decimal(bin_str)
 
 # Life Support rating
