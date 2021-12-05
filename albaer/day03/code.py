@@ -15,6 +15,16 @@ def read_input_lines(input_file_path="input.txt"):
 def bin_str_to_int(bin_str):
     return int(bin_str, 2)
 
+def bits_to_bin_str(bits):
+    return "".join(bits)
+
+def reverse_bits(lst):
+    return ["1" if i == "0" else "0" for i in lst]
+
+def bits_to_int(bits):
+    bin_str = bits_to_bin_str(bits)
+    return bin_str_to_int(bin_str)
+
 def most_common_bit_at(lst, n):
     bits_at_position = [int(i[n]) for i in lst]
     ones = sum(bits_at_position)
@@ -29,16 +39,6 @@ def least_common_bits(lst):
     most_common = most_common_bits(lst)
     return reverse_bits(most_common)
 
-def bits_to_bin_str(bits):
-    return "".join(bits)
-
-def reverse_bits(lst):
-    return ["1" if i == "0" else "0" for i in lst]
-
-def bits_to_int(bits):
-    bin_str = bits_to_bin_str(bits)
-    return bin_str_to_int(bin_str)
-
 def calculate_gamma(lst):
     bits = most_common_bits(lst)
     return bits_to_int(bits)
@@ -52,14 +52,18 @@ def calculate_power_consumption(lst):
     epsilon = calculate_epsilon(lst)
     return gamma * epsilon
 
+def filter_by_prevalence_at(lst, position, prevalence):
+    match prevalence:
+        case "highest":
+            desired_bit = most_common_bit_at(lst, position)
+        case "lowest":
+            desired_bit = least_common_bit_at(lst, position)
+
+    return [i for i in lst if i[position] == str(desired_bit)]
 
 # Part 2
 
 # Oxygen Generator Rating
-
-def filter_by_most_common_bit_at(lst, n):
-    most_common_n_bit = most_common_bit_at(lst, n)
-    return [i for i in lst if i[n] == str(most_common_n_bit)]
 
 def find_ox_gen_rating(lst, index):
     number_of_bits = len(lst[0])
@@ -68,7 +72,7 @@ def find_ox_gen_rating(lst, index):
     elif index > number_of_bits - 1:
         return "ERROR"
     else:
-        new_lst = filter_by_most_common_bit_at(lst, index)
+        new_lst = filter_by_prevalence_at(lst, index, "highest")
         return find_ox_gen_rating(new_lst, index + 1)
 
 def calculate_ox_gen_rating(lst):
@@ -83,10 +87,6 @@ def least_common_bit_at(lst, n):
     zeroes = len(lst) - ones
     return 1 if ones < zeroes else 0
 
-def filter_by_least_common_bit_at(lst, n):
-    least_common_n_bit = least_common_bit_at(lst, n)
-    return [i for i in lst if i[n] == str(least_common_n_bit)]
-
 def find_co2_scrubber_rating(lst, index):
     number_of_bits = len(lst[0])
     if len(lst) == 1:
@@ -94,7 +94,7 @@ def find_co2_scrubber_rating(lst, index):
     elif index > number_of_bits - 1:
         return "ERROR"
     else:
-        new_lst = filter_by_least_common_bit_at(lst, index)
+        new_lst = filter_by_prevalence_at(lst, index, "lowest")
         return find_co2_scrubber_rating(new_lst, index + 1)
 
 def calculate_co2_scrubber_rating(lst):
