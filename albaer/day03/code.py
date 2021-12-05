@@ -71,8 +71,8 @@ def find_ox_gen_rating(lst, index):
         new_lst = filter_by_most_common_bit_at(lst, index)
         return find_ox_gen_rating(new_lst, index + 1)
 
-def calculate_ox_gen_rating(lst, index):
-    bin_str = find_ox_gen_rating(input_lines, 0)
+def calculate_ox_gen_rating(lst):
+    bin_str = find_ox_gen_rating(lst, 0)
     return bin_str_to_int(bin_str)
 
 # C02 Scrubber Rating
@@ -97,13 +97,13 @@ def find_co2_scrubber_rating(lst, index):
         new_lst = filter_by_least_common_bit_at(lst, index)
         return find_co2_scrubber_rating(new_lst, index + 1)
 
-def calculate_co2_scrubber_rating(lst, index):
-    bin_str = find_co2_scrubber_rating(input_lines, 0)
+def calculate_co2_scrubber_rating(lst):
+    bin_str = find_co2_scrubber_rating(lst, 0)
     return bin_str_to_int(bin_str)
 
 def calculate_life_support_rating(lst):
-    ox_gen_rating = calculate_ox_gen_rating(lst, 0)
-    co2_scrubber_rating = calculate_co2_scrubber_rating(lst, 0)
+    ox_gen_rating = calculate_ox_gen_rating(lst)
+    co2_scrubber_rating = calculate_co2_scrubber_rating(lst)
     return ox_gen_rating * co2_scrubber_rating
 
 # Write solution
