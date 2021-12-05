@@ -74,9 +74,9 @@ getLastWinner (n : ns) boards =
 main :: IO ()
 main = do
     input <- readFile "./input.txt"
-    let inputs = lines input
-    let numbers = map readInt (splitOnCommas (inputs !! 0) "" [])
-    let boards = readBoards (drop 1 inputs) []
+    let (l : ls) = lines input
+    let numbers = map readInt (splitOnCommas l "" [])
+    let boards = readBoards ls []
 
     let (board, number) = getWinner numbers boards
     let score = boardScore board
