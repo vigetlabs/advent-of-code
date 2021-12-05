@@ -25,12 +25,6 @@ def bits_to_int(bits):
     bin_str = bits_to_bin_str(bits)
     return bin_str_to_int(bin_str)
 
-def most_common_bit_at(lst, n):
-    bits_at_position = [int(i[n]) for i in lst]
-    ones = sum(bits_at_position)
-    zeroes = len(lst) - ones
-    return 1 if ones >= zeroes else 0
-
 def most_common_bits(lst):
     number_of_bits = len(lst[0])
     return [str(most_common_bit_at(lst, i)) for i in range(number_of_bits)]
@@ -52,6 +46,27 @@ def calculate_power_consumption(lst):
     epsilon = calculate_epsilon(lst)
     return gamma * epsilon
 
+# def find_by_prevalence(lst, prevalence, tie_goes_to):
+#     bits_at_position = [int(i[n]) for i in lst]
+#     ones = lst.count()
+#     zeroes = len(lst) - ones
+#     match prevalence:
+#         case "highest":
+
+def count_bits_at(lst, n):
+    bits_at_position = [i[n] for i in lst]
+    ones = bits_at_position.count("1")
+    zeroes = bits_at_position.count("0")
+    return [ones, zeroes]
+
+def most_common_bit_at(lst, n):
+    ones, zeroes = count_bits_at(lst, n)
+    return "1" if ones >= zeroes else "0"
+
+def least_common_bit_at(lst, n):
+    ones, zeroes = count_bits_at(lst, n)
+    return "1" if ones < zeroes else "0"
+
 def filter_by_prevalence_at(lst, position, prevalence):
     match prevalence:
         case "highest":
@@ -59,7 +74,7 @@ def filter_by_prevalence_at(lst, position, prevalence):
         case "lowest":
             desired_bit = least_common_bit_at(lst, position)
 
-    return [i for i in lst if i[position] == str(desired_bit)]
+    return [i for i in lst if i[position] == desired_bit]
 
 # Part 2
 
@@ -81,11 +96,6 @@ def calculate_ox_gen_rating(lst):
 
 # C02 Scrubber Rating
 
-def least_common_bit_at(lst, n):
-    bits_at_position = [int(i[n]) for i in lst]
-    ones = sum(bits_at_position)
-    zeroes = len(lst) - ones
-    return 1 if ones < zeroes else 0
 
 def find_co2_scrubber_rating(lst, index):
     number_of_bits = len(lst[0])
