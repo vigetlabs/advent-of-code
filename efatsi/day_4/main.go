@@ -11,7 +11,6 @@ import (
 )
 
 func main() {
-  // data, _ := os.ReadFile("example_mine.txt")
   // data, _ := os.ReadFile("example.txt")
   data, _ := os.ReadFile("input.txt")
 
