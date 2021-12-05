@@ -12,7 +12,7 @@ def read_input_lines(input_file_path="input.txt"):
 
 # Part 1
 
-def bin_str_to_int(bin_str):
+def bin_str_to_decimal(bin_str):
     return int(bin_str, 2)
 
 def bits_to_bin_str(bits):
@@ -23,11 +23,11 @@ def reverse_bits(lst):
 
 def bits_to_int(bits):
     bin_str = bits_to_bin_str(bits)
-    return bin_str_to_int(bin_str)
+    return bin_str_to_decimal(bin_str)
 
 def most_common_bits(lst):
     number_of_bits = len(lst[0])
-    return [str(most_common_bit_at(lst, i)) for i in range(number_of_bits)]
+    return [most_common_bit_at(lst, i) for i in range(number_of_bits)]
 
 def least_common_bits(lst):
     most_common = most_common_bits(lst)
@@ -76,6 +76,7 @@ def filter_by_prevalence_at(lst, position, prevalence):
 
     return [i for i in lst if i[position] == desired_bit]
 
+
 # Part 2
 
 # Oxygen Generator Rating
@@ -92,7 +93,7 @@ def find_ox_gen_rating(lst, index):
 
 def calculate_ox_gen_rating(lst):
     bin_str = find_ox_gen_rating(lst, 0)
-    return bin_str_to_int(bin_str)
+    return bin_str_to_decimal(bin_str)
 
 # C02 Scrubber Rating
 
@@ -109,7 +110,7 @@ def find_co2_scrubber_rating(lst, index):
 
 def calculate_co2_scrubber_rating(lst):
     bin_str = find_co2_scrubber_rating(lst, 0)
-    return bin_str_to_int(bin_str)
+    return bin_str_to_decimal(bin_str)
 
 def calculate_life_support_rating(lst):
     ox_gen_rating = calculate_ox_gen_rating(lst)
