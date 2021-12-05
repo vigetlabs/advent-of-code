@@ -15,37 +15,11 @@ def read_input_lines(input_file_path="input.txt"):
 def bin_str_to_decimal(bin_str):
     return int(bin_str, 2)
 
-def bits_to_bin_str(bits):
-    return "".join(bits)
-
-def reverse_bits(lst):
-    return ["1" if i == "0" else "0" for i in lst]
-
-def bits_to_int(bits):
-    bin_str = bits_to_bin_str(bits)
-    return bin_str_to_decimal(bin_str)
-
-def most_common_bits(lst):
-    number_of_bits = len(lst[0])
-    return [most_common_bit_at(lst, i) for i in range(number_of_bits)]
-
-def least_common_bits(lst):
-    most_common = most_common_bits(lst)
-    return reverse_bits(most_common)
-
 def count_bits_at(lst, n):
     bits_at_position = [i[n] for i in lst]
     ones = bits_at_position.count("1")
     zeroes = bits_at_position.count("0")
     return [ones, zeroes]
-
-def most_common_bit_at(lst, n):
-    ones, zeroes = count_bits_at(lst, n)
-    return "1" if ones >= zeroes else "0"
-
-def least_common_bit_at(lst, n):
-    ones, zeroes = count_bits_at(lst, n)
-    return "1" if ones < zeroes else "0"
 
 def get_bit_by_prevalence_at(lst, prevalence, position):
     ones, zeroes = count_bits_at(lst, position)
@@ -54,14 +28,22 @@ def get_bit_by_prevalence_at(lst, prevalence, position):
             return "1" if ones >= zeroes else "0"
         case "lowest":
             return "1" if ones < zeroes else "0"
+
+def get_bits_by_prevalence(lst, prevalence):
+    number_of_bits = len(lst[0])
+    return [get_bit_by_prevalence_at(lst, prevalence, i) for i in range(number_of_bits)]
+
+def bits_to_int(bits):
+    return bin_str_to_decimal("".join(bits))
+
 # Part 1
 
 def calculate_gamma(lst):
-    bits = most_common_bits(lst)
+    bits = get_bits_by_prevalence(lst, "highest")
     return bits_to_int(bits)
 
 def calculate_epsilon(lst):
-    bits = least_common_bits(lst)
+    bits = get_bits_by_prevalence(lst, "lowest")
     return bits_to_int(bits)
 
 def calculate_power_consumption(lst):
