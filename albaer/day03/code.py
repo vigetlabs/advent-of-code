@@ -79,38 +79,29 @@ def filter_by_prevalence_at(lst, position, prevalence):
 
 # Part 2
 
-# Oxygen Generator Rating
-
-def find_ox_gen_rating(lst, index):
+def find_by_prevalence(lst, index, prevalence):
     number_of_bits = len(lst[0])
     if len(lst) == 1:
         return lst[0]
     elif index > number_of_bits - 1:
         return "ERROR"
     else:
-        new_lst = filter_by_prevalence_at(lst, index, "highest")
-        return find_ox_gen_rating(new_lst, index + 1)
+        new_lst = filter_by_prevalence_at(lst, index, prevalence)
+        return find_by_prevalence(new_lst, index + 1, prevalence)
+
+# Oxygen Generator Rating
 
 def calculate_ox_gen_rating(lst):
-    bin_str = find_ox_gen_rating(lst, 0)
+    bin_str = find_by_prevalence(lst, 0, "highest")
     return bin_str_to_decimal(bin_str)
 
 # C02 Scrubber Rating
 
-
-def find_co2_scrubber_rating(lst, index):
-    number_of_bits = len(lst[0])
-    if len(lst) == 1:
-        return lst[0]
-    elif index > number_of_bits - 1:
-        return "ERROR"
-    else:
-        new_lst = filter_by_prevalence_at(lst, index, "lowest")
-        return find_co2_scrubber_rating(new_lst, index + 1)
-
 def calculate_co2_scrubber_rating(lst):
-    bin_str = find_co2_scrubber_rating(lst, 0)
+    bin_str = find_by_prevalence(lst, 0, "lowest")
     return bin_str_to_decimal(bin_str)
+
+# Life Support rating
 
 def calculate_life_support_rating(lst):
     ox_gen_rating = calculate_ox_gen_rating(lst)
