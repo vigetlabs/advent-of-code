@@ -27,33 +27,45 @@ parseLine :: String -> Line
 parseLine str = let pair = fmap (fmap read . splitBy ',')
                             $ filter (/= "->")
                             $ words str in
-  sort [(head $ head pair, last $ head pair),
+  [(head $ head pair, last $ head pair),
    (head $ last pair, last $ last pair)]
 
-solve1 :: [Line] -> Int
-solve1 = length
+solve :: [Line] -> Int
+solve = length
   . filter (>= 2)
   . fmap length
   . group
   . sort
   . concatMap expandLine
-  . filter isStraight
 
+isStraight :: Line -> Bool
+isStraight [(x1,y1), (x2,y2)]
+  | x1 == x2 = True
+  | y1 == y2 = True
+  | otherwise = False
+isStraight _ = error "Line must have 2 elements"
+
+expandLine :: Line -> [Point]
+expandLine [(x1, y1), (x2, y2)] = zip xRange yRange
   where
-    isStraight :: Line -> Bool
-    isStraight [(x1,y1), (x2,y2)]
-      | x1 == x2 = True
-      | y1 == y2 = True
-      | otherwise = False
-    isStraight _ = error "Line must have 2 elements"
+    xRange
+      | x1 == x2 = repeat x1
+      | x1 < x2 = [x1..x2]
+      | otherwise = reverse [x2..x1]
 
-    expandLine :: Line -> [Point]
-    expandLine [(x1, y1), (x2, y2)] = (,) <$> [x1..x2] <*> [y1..y2]
-    expandLine _ = error "Line must have 2 elements"
+    yRange
+      | y1 == y2 = repeat y1
+      | y1 < y2 = [y1..y2]
+      | otherwise = reverse [y2..y1]
 
+expandLine _ = error "Line must have 2 elements"
 
 main :: IO ()
 main = do
   input <- readFile "day-05/input.txt"
   let ls = parseLine <$> lines input
-  print $ solve1 ls
+  putStrLn "Part 1"
+  print $ solve $ filter isStraight ls
+
+  putStrLn "Part 2"
+  print $ solve ls
