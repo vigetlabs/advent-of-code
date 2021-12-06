@@ -10,19 +10,21 @@ def read_input_lines(input_file_path="input.txt"):
     with open(input_file_path, "r") as input_file:
         return input_file.read().splitlines()
 
-# Part 1
+# Binary conversion utilities
 
 def bin_str_to_decimal(bin_str):
     return int(bin_str, 2)
 
-def count_bits_at(lst, n):
-    bits_at_position = [i[n] for i in lst]
-    ones = bits_at_position.count("1")
-    zeroes = bits_at_position.count("0")
-    return [ones, zeroes]
+def bits_to_int(bits):
+    return bin_str_to_decimal("".join(bits))
+
+# Part 1
 
 def get_bit_by_prevalence_at(lst, prevalence, position):
-    ones, zeroes = count_bits_at(lst, position)
+    bits_at_position = [i[position] for i in lst]
+    ones = bits_at_position.count("1")
+    zeroes = bits_at_position.count("0")
+
     match prevalence:
         case "highest":
             return "1" if ones >= zeroes else "0"
@@ -33,10 +35,8 @@ def get_bits_by_prevalence(lst, prevalence):
     number_of_bits = len(lst[0])
     return [get_bit_by_prevalence_at(lst, prevalence, i) for i in range(number_of_bits)]
 
-def bits_to_int(bits):
-    return bin_str_to_decimal("".join(bits))
 
-# Part 1
+# Part 1 Calculations
 
 def calculate_gamma(lst):
     bits = get_bits_by_prevalence(lst, "highest")
@@ -67,19 +67,15 @@ def find_by_prevalence(lst, prevalence, index=0):
         new_lst = filter_by_prevalence_at(lst, prevalence, index)
         return find_by_prevalence(new_lst, prevalence, index + 1)
 
-# Oxygen Generator Rating
+# Part 2 Calculations
 
 def calculate_ox_gen_rating(lst):
     bin_str = find_by_prevalence(lst, "highest")
     return bin_str_to_decimal(bin_str)
 
-# C02 Scrubber Rating
-
 def calculate_co2_scrubber_rating(lst):
     bin_str = find_by_prevalence(lst, "lowest")
     return bin_str_to_decimal(bin_str)
-
-# Life Support rating
 
 def calculate_life_support_rating(lst):
     ox_gen_rating = calculate_ox_gen_rating(lst)
