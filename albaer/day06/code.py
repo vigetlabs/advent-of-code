@@ -12,15 +12,14 @@ def read_input_lines(input_file_path="input.txt"):
 
 # Part 1
 
-def get_inputs_as_integers():
+def get_inputs():
   input_lines = read_input_lines()
   first_line_as_str = input_lines[0]
-  str_inputs = first_line_as_str.split(",")
-  return [int(i) for i in str_inputs]
+  return first_line_as_str.split(",")
 
 def increment_day(lst):
     # pprint(lst)
-    subtract_1_lst = [i - 1 for i in lst]
+    subtract_1_lst = [int(i) - 1 for i in lst]
     # pprint(subtract_1_lst)
     count_reproducers = subtract_1_lst.count(-1)
     # pprint(count_reproducers)
@@ -50,8 +49,8 @@ def count_population(lst, days):
 # Write solution
 
 if __name__ == '__main__':
-    input_ints = get_inputs_as_integers()
+    input_ints = get_inputs()
     part_1_result = count_population(input_ints, 80)
-    part_2_result = "TODO"
+    # part_2_result = count_population(input_ints, 256)
     solution = str(part_1_result) + "\n" + str(part_2_result)
     write_solution(solution)

@@ -2,7 +2,7 @@ import unittest
 from code import *
 
 class TestDay06(unittest.TestCase):
-    EXAMPLE_INPUT = [3,4,3,1,2]
+    EXAMPLE_INPUT = [3,4,3,1,2,]
 
     # Part 1
 
@@ -25,6 +25,11 @@ class TestDay06(unittest.TestCase):
         actual = count_population(self.EXAMPLE_INPUT, 80)
         expected = 5934
         self.assertEqual(actual, expected)
+
+    # def test_count_population_after_256_days(self):
+    #     actual = count_population(self.EXAMPLE_INPUT, 256)
+    #     expected = 26984457539
+    #     self.assertEqual(actual, expected)
 
 if __name__ == '__main__':
     unittest.main()
