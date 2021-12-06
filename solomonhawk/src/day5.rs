@@ -30,16 +30,6 @@ impl FromStr for Line {
     }
 }
 
-fn filter_lines(lines: &[Line]) -> Vec<&Line> {
-    lines
-        .iter()
-        .filter(|line| match line {
-            Line(x1, y1, x2, y2) if x1 == x2 || y1 == y2 => true,
-            _ => false,
-        })
-        .collect()
-}
-
 fn point_range_vh(a: u32, b: u32) -> impl DoubleEndedIterator<Item = u32> {
     if a > b {
         b..a + 1
@@ -55,10 +45,12 @@ fn point_range_diag(line: &Line) -> Box<dyn Iterator<Item = (u32, u32)>> {
     let h = point_range_vh(x1, x2);
     let v = point_range_vh(y1, y2);
 
+    // xs are reversed, so we need to reverse ys
     if x1 > x2 && y1 < y2 {
         return Box::new(h.zip(v.rev()));
     }
 
+    // ys are reversed, so we need to reverse ss
     if y1 > y2 && x1 < x2 {
         return Box::new(h.rev().zip(v));
     }
@@ -74,9 +66,8 @@ fn input_generator(input: &str) -> Vec<Line> {
 #[aoc(day5, part1)]
 fn part1(lines: &[Line]) -> usize {
     let mut counts: HashMap<(u32, u32), u32> = HashMap::new();
-    let straight_lines = filter_lines(lines);
 
-    for line in straight_lines {
+    for line in lines {
         let Line(x1, y1, x2, y2) = &line;
 
         if x1 == x2 {
