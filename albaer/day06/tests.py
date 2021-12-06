@@ -2,7 +2,7 @@ import unittest
 from code import *
 
 class TestDay06(unittest.TestCase):
-    EXAMPLE_INPUT = [3,4,3,1,2,]
+    EXAMPLE_INPUT = ["3","4","3","1","2",]
 
     # Part 1
 
