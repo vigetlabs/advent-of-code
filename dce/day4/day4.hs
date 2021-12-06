@@ -25,7 +25,7 @@ readBoards inputs boards =
 
 applyNumberToRow :: Int -> [(Int, Bool)] -> [(Int, Bool)]
 applyNumberToRow number row =
-    let check = \(n, p) -> if n == number then (n, True) else (n, p) in
+    let check (n, p) = if n == number then (n, True) else (n, p) in
     map check row
 
 applyNumberToBoard :: Int -> [[(Int, Bool)]] -> [[(Int, Bool)]]
