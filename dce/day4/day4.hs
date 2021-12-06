@@ -60,7 +60,7 @@ boardScore board =
     let spaceScore = \(i, c) -> if c then 0 else i in
     let rowScore = foldl (\sc sp -> sc + spaceScore sp) 0 in
     let rowScores = map rowScore board in
-    foldl (\sc r -> sc + r) 0 rowScores
+    foldl (+) 0 rowScores
 
 getLastWinner :: [Int] -> [[[(Int, Bool)]]] -> ([[(Int, Bool)]], Int)
 getLastWinner (n : ns) boards =
