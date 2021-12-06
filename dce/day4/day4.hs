@@ -10,7 +10,7 @@ splitOnCommas (i : input) word list = splitOnCommas input (word ++ [i]) list
 
 readRow :: String -> [(Int, Bool)]
 readRow input =
-    let numbers = map readInt (words input) in
+    let numbers = map read (words input) :: Int in
     map (\n -> (n, False)) numbers
 
 readBoard :: [String] -> [[(Int, Bool)]] -> [[(Int, Bool)]]
