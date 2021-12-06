@@ -14,9 +14,9 @@ incAt (i : is) idx amt = i : incAt is (idx - 1) amt
 
 iter :: [Int] -> [Int]
 iter fish = 
-    let inc = \f n -> if n == 0
-                          then incAt (incAt f 8 (fish !! 0)) 6 (fish !! 0)
-                      else incAt f (n - 1) (fish !! n) in
+    let inc f n = if n == 0
+                      then incAt (incAt f 8 (fish !! 0)) 6 (fish !! 0)
+                  else incAt f (n - 1) (fish !! n) in
     foldl inc emptyList [0..8]
 
 main :: IO ()
