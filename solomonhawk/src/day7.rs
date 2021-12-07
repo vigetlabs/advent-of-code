@@ -26,7 +26,9 @@ pub fn part2(positions: &[i32]) -> i32 {
 }
 
 fn fuel(d: i32) -> i32 {
-    (1..d + 1).sum()
+    // use arithmetic series
+    // https://mathworld.wolfram.com/ArithmeticSeries.html
+    d * (1 + d) / 2
 }
 
 #[cfg(test)]
