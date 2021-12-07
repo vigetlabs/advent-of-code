@@ -28,9 +28,27 @@ solve1 crabMarines = minimum
       getPosition = pos
     } n = CrabMarine { getPosition=n, getFuel=abs $ n - pos }
 
+solve2 :: [CrabMarine] -> Int
+solve2 crabMarines = minimum
+   $ (sum . map getFuel) . moveMarines
+  <$> [minPos..maxPos]
+  where
+    moveMarines x = map (\f -> f x) $ moveTo <$> crabMarines
+    (minPos, maxPos) = (,) <$> minimum <*> maximum $ map getPosition crabMarines
+    moveTo :: CrabMarine -> Int -> CrabMarine
+    moveTo CrabMarine {
+        getPosition = pos
+    } n = CrabMarine { getPosition=n, getFuel=fuelForDistance $ abs $ n - pos }
+
+    fuelForDistance 0 = 0
+    fuelForDistance n = n + fuelForDistance (n - 1)
+
 main :: IO ()
 main = do
   input <- readFile "day-07/input.txt"
   let crabMarines = prepare input
   putStrLn  "Part 1"
   print $ solve1 crabMarines
+
+  putStrLn  "Part 2"
+  print $ solve2 crabMarines
