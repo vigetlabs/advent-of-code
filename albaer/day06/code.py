@@ -54,8 +54,8 @@ def count_population(lst, days):
 # Write solution
 
 if __name__ == '__main__':
-    input_ints = get_inputs()
-    part_1_result = count_population(input_ints, 80)
-    part_2_result = count_population(input_ints, 256)
+    inputs = get_inputs()
+    part_1_result = count_population(inputs, 80)
+    part_2_result = count_population(inputs, 256)
     solution = str(part_1_result) + "\n" + str(part_2_result)
     write_solution(solution)
