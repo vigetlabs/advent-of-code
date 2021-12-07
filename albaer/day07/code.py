@@ -20,11 +20,21 @@ def split_inputs_from_first_line():
 def inputs_as_integers():
     return [int(i) for i in split_inputs_from_first_line()]
 
-def linear_fuel_cost(start_at, end_at):
+def constant_fuel_cost(start_at, end_at):
     return abs(start_at - end_at)
 
+def increasing_fuel_cost(start_at, end_at):
+    return sum(range(1, abs(start_at - end_at) + 1))
+
+def calculate_fuel_cost(start_at, end_at, formula):
+    match formula:
+        case "constant":
+            return constant_fuel_cost(start_at, end_at)
+        case "increasing":
+            return increasing_fuel_cost(start_at, end_at)
+
 def determine_fuel_cost_to_alignment_at(lst, position):
-    return sum([linear_fuel_cost(i, position) for i in lst])
+    return sum([calculate_fuel_cost(i, position, "constant") for i in lst])
 
 def get_positions(lst):
     return range(min(lst), max(lst) + 1)
