@@ -60,3 +60,5 @@ if __name__ == '__main__':
     part_2_result = determine_minimum_fuel_cost(int_inputs, "increasing")
     solution = str(part_1_result) + "\n" + str(part_2_result)
     write_solution(solution)
+
+# TODO: Part 2 takes several seconds to run. Refactor for efficiency.
