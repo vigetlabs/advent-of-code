@@ -15,33 +15,23 @@ const filename = "input.txt"
 func main() {
   data, _ := os.ReadFile(filename)
 
-  trimmed_data := strings.Trim(string(data), "\n ")
-  position_strings := strings.Split(trimmed_data, ",")
-  positions := str_to_int(position_strings)
+  trimmedData := strings.Trim(string(data), "\n ")
+  positionStrings := strings.Split(trimmedData, ",")
+  positions := strToInt(positionStrings)
 
   // Part 1
   sort.Ints(positions)
   median := positions[len(positions) / 2]
-  required_fuel := calculate_fuel(positions, median)
-  fmt.Println("Fuel: ", required_fuel)
+  requiredFuel := calculateFuel(positions, median)
+  fmt.Println("Fuel: ", requiredFuel)
 
   // Part 2
-  average := calculate_average(positions)
-  expensive_fuel := calculate_expensive_fuel(positions, int(average))
-  fmt.Println("Expensive Fuel: ", expensive_fuel)
+  average := calculateAverage(positions)
+  expensiveFuel := calculateExpensiveFuel(positions, average)
+  fmt.Println("Expensive Fuel: ", expensiveFuel)
 }
 
-func calculate_average(ints []int) float64 {
-  sum := 0
-
-  for _, x := range ints {
-    sum += x
-  }
-
-  return float64(sum) / float64(len(ints))
-}
-
-func calculate_fuel(positions []int, target int) int {
+func calculateFuel(positions []int, target int) int {
   fuel := 0
 
   for _, x := range positions {
@@ -51,23 +41,33 @@ func calculate_fuel(positions []int, target int) int {
   return fuel
 }
 
-func calculate_expensive_fuel(positions []int, target int) int {
+func calculateExpensiveFuel(positions []int, target int) int {
   fuel := 0
 
   for _, x := range positions {
     distance := int(math.Abs(float64(x - target)))
-    fuel += nth_triangle(distance)
+    fuel += nthTriangle(distance)
   }
 
   return fuel
 }
 
-func nth_triangle(input int) int {
+func nthTriangle(input int) int {
   // input + (input - 1) + (input - 2) + ... + 0
   return ((input * input) + input) / 2
 }
 
-func str_to_int(strings []string) []int {
+func calculateAverage(ints []int) int {
+  sum := 0
+
+  for _, x := range ints {
+    sum += x
+  }
+
+  return sum / len(ints)
+}
+
+func strToInt(strings []string) []int {
   ints := make([]int, len(strings))
 
   for i, str := range strings {
