@@ -14,13 +14,13 @@ def read_input_lines(input_file_path="input.txt"):
 # Parts 1 and 2
 
 def get_inputs():
-  input_lines = read_input_lines()
-  first_line_as_str = input_lines[0]
-  return first_line_as_str.split(",")
+    input_lines = read_input_lines()
+    first_line_as_str = input_lines[0]
+    return first_line_as_str.split(",")
 
 def get_counts_dct(lst):
-  counter = collections.Counter(lst)
-  return dict(counter)
+    counter = collections.Counter(lst)
+    return dict(counter)
 
 def increment_day(dct):
     # Subtract 1 for each fish
