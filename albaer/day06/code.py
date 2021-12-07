@@ -1,4 +1,5 @@
 from pprint import pprint
+import collections
 
 def write_solution(solution, output_file_path="solution.txt"):
     with open(output_file_path, "w") as output_file:
@@ -10,47 +11,51 @@ def read_input_lines(input_file_path="input.txt"):
     with open(input_file_path, "r") as input_file:
         return input_file.read().splitlines()
 
-# Part 1
+# Parts 1 and 2
 
 def get_inputs():
   input_lines = read_input_lines()
   first_line_as_str = input_lines[0]
   return first_line_as_str.split(",")
 
-def increment_day(lst):
-    # pprint(lst)
-    subtract_1_lst = [int(i) - 1 for i in lst]
-    # pprint(subtract_1_lst)
-    count_reproducers = subtract_1_lst.count(-1)
-    # pprint(count_reproducers)
-    new_fish_lst = [8] * count_reproducers
-    # pprint(new_fish_lst)
-    reproduce_lst = subtract_1_lst + new_fish_lst
-    # pprint(reproduce_lst)
-    result = [6 if i == -1 else i for i in reproduce_lst]
-    # pprint(result)
-    return result
+def get_counts_dct(lst):
+  counter = collections.Counter(lst)
+  return dict(counter)
 
-def increment_days(lst, days, current_day=0):
+def increment_day(dct):
+    # Subtract 1 for each fish
+    dct = {str(int(k) - 1): v for k, v in dct.items()}
+    # Count number of fish that are reproducting
+    reproducers_count = dct.get("-1", 0)
+    # Add one new fish at 8 for each one that is reproducting
+    dct["8"] = reproducers_count
+    # Combine fish that just reproduced with existing 6s
+    dct["6"] = dct.get("6", 0) + reproducers_count
+    if '-1' in dct: del dct['-1']
+    # Remove keys with value of 0
+    dct = {k: v for k, v in dct.items() if v != 0}
+    return dct
+
+def increment_days(dct, days, current_day=0):
     if days == current_day:
-        return lst
+        return dct
     else:
-        new_lst = increment_day(lst)
-        return increment_days(new_lst, days, current_day + 1)
+        new_dct = increment_day(dct)
+        return increment_days(new_dct, days, current_day + 1)
 
 def represent_population(lst, days):
-    return increment_days(lst, days)
+    dct = get_counts_dct(lst)
+    return increment_days(dct, days)
 
 def count_population(lst, days):
-    return len(represent_population(lst, days))
-
-# Part 2
+    population_dict = represent_population(lst, days)
+    return sum(population_dict.values())
 
 # Write solution
 
 if __name__ == '__main__':
     input_ints = get_inputs()
     part_1_result = count_population(input_ints, 80)
-    # part_2_result = count_population(input_ints, 256)
+    part_2_result = count_population(input_ints, 256)
     solution = str(part_1_result) + "\n" + str(part_2_result)
     write_solution(solution)
