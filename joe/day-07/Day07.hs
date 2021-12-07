@@ -40,8 +40,7 @@ solve2 crabMarines = minimum
         getPosition = pos
     } n = CrabMarine { getPosition=n, getFuel=fuelForDistance $ abs $ n - pos }
 
-    fuelForDistance 0 = 0
-    fuelForDistance n = n + fuelForDistance (n - 1)
+    fuelForDistance n = sum [1..n]
 
 main :: IO ()
 main = do
