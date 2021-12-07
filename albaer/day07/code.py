@@ -57,6 +57,6 @@ def determine_minimum_fuel_cost(lst, calculation):
 if __name__ == '__main__':
     int_inputs = inputs_as_integers()
     part_1_result = determine_minimum_fuel_cost(int_inputs, "constant")
-    part_2_result = "TODO"
+    part_2_result = determine_minimum_fuel_cost(int_inputs, "increasing")
     solution = str(part_1_result) + "\n" + str(part_2_result)
     write_solution(solution)
