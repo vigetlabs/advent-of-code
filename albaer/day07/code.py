@@ -33,30 +33,30 @@ def calculate_fuel_cost(start_at, end_at, formula):
         case "increasing":
             return increasing_fuel_cost(start_at, end_at)
 
-def determine_fuel_cost_to_alignment_at(lst, position):
-    return sum([calculate_fuel_cost(i, position, "constant") for i in lst])
+def determine_fuel_cost_to_alignment_at(lst, position, calculation):
+    return sum([calculate_fuel_cost(i, position, calculation) for i in lst])
 
 def get_positions(lst):
     return range(min(lst), max(lst) + 1)
 
-def get_fuel_costs(lst):
+def get_fuel_costs(lst, calculation):
     positions = get_positions(lst)
-    return [determine_fuel_cost_to_alignment_at(lst, i) for i in positions]
+    return [determine_fuel_cost_to_alignment_at(lst, i, calculation) for i in positions]
 
-def determine_cheapest_alignment(lst):
+def determine_cheapest_alignment(lst, calculation):
     positions = get_positions(lst)
-    fuel_costs = get_fuel_costs(lst)
+    fuel_costs = get_fuel_costs(lst, calculation)
     return positions[fuel_costs.index(min(fuel_costs))]
 
-def determine_minimum_fuel_cost(lst):
-    fuel_costs = get_fuel_costs(lst)
+def determine_minimum_fuel_cost(lst, calculation):
+    fuel_costs = get_fuel_costs(lst, calculation)
     return min(fuel_costs)
 
 # Write solution
 
 if __name__ == '__main__':
     int_inputs = inputs_as_integers()
-    part_1_result = determine_minimum_fuel_cost(int_inputs)
+    part_1_result = determine_minimum_fuel_cost(int_inputs, "constant")
     part_2_result = "TODO"
     solution = str(part_1_result) + "\n" + str(part_2_result)
     write_solution(solution)
