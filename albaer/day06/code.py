@@ -25,9 +25,9 @@ def get_counts_dct(lst):
 def increment_day(dct):
     # Subtract 1 for each fish
     dct = {str(int(k) - 1): v for k, v in dct.items()}
-    # Count number of fish that are reproducting
+    # Count number of fish that are reproducing
     reproducers_count = dct.get("-1", 0)
-    # Add one new fish at 8 for each one that is reproducting
+    # Add one new fish at 8 for each one that is reproducing
     dct["8"] = reproducers_count
     # Combine fish that just reproduced with existing 6s
     dct["6"] = dct.get("6", 0) + reproducers_count
