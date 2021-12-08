@@ -77,16 +77,29 @@ fn decode_line(entry: &mut Entry) -> usize {
     // subtracting the segments of one from four leaves just the middle (m) and top left (tl) segments
     let mtl = &entry.four.as_ref().unwrap().number & !trbr;
 
+    // 6-segment numbers: 0, 6, 9
+
+    // six only has bottom right, but not top right
     entry.six = find(&mut sixes, |s| s.number & trbr != *trbr);
+
+    // nine has both middle and top left
     entry.nine = find(&mut sixes, |s| s.number & mtl == mtl);
+
+    // zero is the last six-segment digit
     entry.zero = find(&mut sixes, |_s| true);
 
+    // 5-segment numbers: 2, 3, 5
+
+    // three has both top right and bottom right
     entry.three = find(&mut fives, |s| s.number & trbr == *trbr);
 
     // subtracting the segments in 6 from the segments in 0 leaves just the top right (tr) segment
     let tr = &entry.zero.as_ref().unwrap().number & *trbr & !entry.six.as_ref().unwrap().number;
 
+    // of the remaining five-segment digits, two has tr
     entry.two = find(&mut fives, |s| s.number & tr == tr);
+
+    // five is the last remaining five-segment digit
     entry.five = find(&mut fives, |_s| true);
 
     entry
