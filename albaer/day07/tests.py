@@ -7,54 +7,44 @@ class TestDay07(unittest.TestCase):
     # Part 1
 
     def test_determine_constant_fuel_cost_to_alignment_at_1(self):
-        actual = determine_fuel_cost_to_alignment_at(self.EXAMPLE_INPUT, 1, "constant")
+        actual = determine_fuel_cost_to_alignment_at(self.EXAMPLE_INPUT, 1, calc_constant_fuel_cost)
         expected = 41
         self.assertEqual(actual, expected)
 
     def test_determine_constant_fuel_cost_to_alignment_at_2(self):
-        actual = determine_fuel_cost_to_alignment_at(self.EXAMPLE_INPUT, 2, "constant")
+        actual = determine_fuel_cost_to_alignment_at(self.EXAMPLE_INPUT, 2, calc_constant_fuel_cost)
         expected = 37
         self.assertEqual(actual, expected)
 
     def test_determine_constant_fuel_cost_to_alignment_at_3(self):
-        actual = determine_fuel_cost_to_alignment_at(self.EXAMPLE_INPUT, 3, "constant")
+        actual = determine_fuel_cost_to_alignment_at(self.EXAMPLE_INPUT, 3, calc_constant_fuel_cost)
         expected = 39
         self.assertEqual(actual, expected)
 
     def test_determine_constant_fuel_cost_to_alignment_at_10(self):
-        actual = determine_fuel_cost_to_alignment_at(self.EXAMPLE_INPUT, 10, "constant")
+        actual = determine_fuel_cost_to_alignment_at(self.EXAMPLE_INPUT, 10, calc_constant_fuel_cost)
         expected = 71
         self.assertEqual(actual, expected)
 
-    def test_determine_constant_cheapest_alignment(self):
-        actual = determine_cheapest_alignment(self.EXAMPLE_INPUT, "constant")
-        expected = 2
-        self.assertEqual(actual, expected)
-
     def test_determine_constant_minimum_fuel_cost(self):
-        actual = determine_minimum_fuel_cost(self.EXAMPLE_INPUT, "constant")
+        actual = determine_minimum_fuel_cost(self.EXAMPLE_INPUT, calc_constant_fuel_cost)
         expected = 37
         self.assertEqual(actual, expected)
 
     # Part 2
 
     def test_determine_increasing_fuel_cost_to_alignment_at_2(self):
-        actual = determine_fuel_cost_to_alignment_at(self.EXAMPLE_INPUT, 2, "increasing")
+        actual = determine_fuel_cost_to_alignment_at(self.EXAMPLE_INPUT, 2, calc_increasing_fuel_cost)
         expected = 206
         self.assertEqual(actual, expected)
 
     def test_determine_increasing_fuel_cost_to_alignment_at_5(self):
-        actual = determine_fuel_cost_to_alignment_at(self.EXAMPLE_INPUT, 5, "increasing")
+        actual = determine_fuel_cost_to_alignment_at(self.EXAMPLE_INPUT, 5, calc_increasing_fuel_cost)
         expected = 168
         self.assertEqual(actual, expected)
 
-    def test_determine_increasing_cheapest_alignment(self):
-        actual = determine_cheapest_alignment(self.EXAMPLE_INPUT, "increasing")
-        expected = 5
-        self.assertEqual(actual, expected)
-
     def test_determine_increasing_minimum_fuel_cost(self):
-        actual = determine_minimum_fuel_cost(self.EXAMPLE_INPUT, "increasing")
+        actual = determine_minimum_fuel_cost(self.EXAMPLE_INPUT, calc_increasing_fuel_cost)
         expected = 168
         self.assertEqual(actual, expected)
 
