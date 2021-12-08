@@ -3,11 +3,15 @@ package main
 import (
   "fmt"
   "os"
+  "sort"
   "strings"
+
+  "day_8/segment"
 )
 
 // const filename = "example.txt"
-const filename = "input.txt"
+const filename = "example_one.txt"
+// const filename = "input.txt"
 
 func main() {
   data, _ := os.ReadFile(filename)
@@ -19,6 +23,13 @@ func main() {
   // Part 1
   easyValueCount := countEasyValues(readings)
   fmt.Println("easyValueCount: ", easyValueCount)
+
+  // Part 2
+  segments := make([]segment.Segment, 0)
+  for k, v := range readings {
+    segments = append(segments, segment.New(k, v))
+  }
+  fmt.Println(segments)
 }
 
 func countEasyValues(readings map[[10]string][4]string) int {
@@ -48,8 +59,14 @@ func assembleReadings(lines []string) map[[10]string][4]string {
 
     var inputArray [10]string
     var outputArray [4]string
-    copy(inputArray[:], inputSlice)
-    copy(outputArray[:], outputSlice)
+
+    for i := 0; i < 10; i++ {
+      inputArray[i] = sortString(inputSlice[i])
+    }
+
+    for i := 0; i < 4; i++ {
+      outputArray[i] = sortString(outputSlice[i])
+    }
 
     readings[inputArray] = outputArray
   }
@@ -65,4 +82,10 @@ func contains(arr []int, val int) bool {
   }
 
   return false
+}
+
+func sortString(w string) string {
+    s := strings.Split(w, "")
+    sort.Strings(s)
+    return strings.Join(s, "")
 }
