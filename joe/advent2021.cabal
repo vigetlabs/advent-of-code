@@ -45,7 +45,7 @@ library
     , day-05
     , day-06
     , day-07
---    , day-08
+    , day-08
 --    , day-09
 --    , day-10
 --    , day-11
@@ -71,7 +71,7 @@ library
     , Day05
     , Day06
     , Day07
---    , Day08
+    , Day08
 --    , Day09
 --    , Day10
 --    , Day11
@@ -115,12 +115,17 @@ executable day-05
     mixins: advent2021 (Day05 as Day)
     main-is: Main.hs
 
+executable day-06
+    import: common-exe-options
+    mixins: advent2021 (Day06 as Day)
+    main-is: Main.hs
+
 executable day-07
     import: common-exe-options
     mixins: advent2021 (Day07 as Day)
     main-is: Main.hs
 
-executable day-06
+executable day-08
     import: common-exe-options
-    mixins: advent2021 (Day06 as Day)
+    mixins: advent2021 (Day08 as Day)
     main-is: Main.hs
