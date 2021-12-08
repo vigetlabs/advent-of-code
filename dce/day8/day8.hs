@@ -3,7 +3,6 @@ import Data.Maybe
 import System.IO
 
 splitInput :: [String] -> [String] -> ([String], [String])
-splitInput _ [] = (["what"], ["why"])
 splitInput inputs ("|" : outputs) = (inputs, outputs)
 splitInput inputs (s : ss) = splitInput (inputs ++ [s]) ss
 
