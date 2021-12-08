@@ -10,8 +10,8 @@ import (
 )
 
 // const filename = "example.txt"
-const filename = "example_one.txt"
-// const filename = "input.txt"
+// const filename = "example_one.txt"
+const filename = "input.txt"
 
 func main() {
   data, _ := os.ReadFile(filename)
@@ -25,11 +25,12 @@ func main() {
   fmt.Println("easyValueCount: ", easyValueCount)
 
   // Part 2
-  segments := make([]segment.Segment, 0)
+  sum := 0
   for k, v := range readings {
-    segments = append(segments, segment.New(k, v))
+    segment := segment.New(k, v)
+    sum += segment.AssembleOutput()
   }
-  fmt.Println(segments)
+  fmt.Println("sum: ", sum)
 }
 
 func countEasyValues(readings map[[10]string][4]string) int {
