@@ -1,6 +1,5 @@
 import gleam/list.{at, index_fold}
 import gleam/result.{unwrap}
-import gleam/io.{debug}
 import gleam/string.{split}
 import gleam/int.{parse}
 
