@@ -11,12 +11,12 @@ def read_input_lines(input_file_path="input.txt"):
     with open(input_file_path, "r") as input_file:
         return input_file.read().splitlines()
 
-# Parts 1 and 2
-
 def get_inputs():
     input_lines = read_input_lines()
     first_line_as_str = input_lines[0]
     return first_line_as_str.split(",")
+
+# Parts 1 and 2
 
 def get_counts_dct(lst):
     counter = collections.Counter(lst)
