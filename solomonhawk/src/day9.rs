@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 const X: i8 = 100;
 const Y: i8 = 100;
 
@@ -29,8 +31,50 @@ pub fn part1(map: &HeightMap) -> isize {
 }
 
 #[aoc(day9, part2)]
-pub fn part2(map: &HeightMap) -> u64 {
-    0
+pub fn part2(map: &HeightMap) -> usize {
+    let mut basin_sizes: Vec<usize> = points_iter()
+        .filter(|point| is_local_minimum(point, &map))
+        .map(|point| find_basin(&point, &map))
+        .map(|basin| basin_size(&basin))
+        .collect::<Vec<usize>>();
+
+    basin_sizes.sort();
+    basin_sizes[basin_sizes.len() - 3..].iter().product()
+}
+
+fn find_basin(origin: &Point, map: &HeightMap) -> Vec<Point> {
+    let mut visited: HashSet<Point> = HashSet::new();
+    let mut candidates = valid_neighbors(origin);
+
+    visited.insert(*origin);
+
+    while candidates.len() > 0 {
+        // grab first candidate as center point, get height and neighbors
+        let point = candidates.swap_remove(0);
+        let neighbors = valid_neighbors(&point);
+        let height = map[point.1 as usize][point.0 as usize];
+
+        // mark this candidate as visited
+        visited.insert(point);
+
+        // iterate over the neighbors, filtering out those that are height 9, or not higher than the current point
+        for (x, y) in neighbors {
+            let neighbor_height = map[y as usize][x as usize];
+
+            if visited.contains(&(x, y)) || neighbor_height <= height || neighbor_height == 9 {
+                continue;
+            }
+
+            // add each higher neighbor as a new candidate to traverse
+            candidates.push((x, y));
+        }
+    }
+
+    visited.into_iter().collect()
+}
+
+fn basin_size(basin: &[Point]) -> usize {
+    basin.len()
 }
 
 fn points_iter() -> impl Iterator<Item = Point> {
@@ -41,13 +85,9 @@ fn is_local_minimum(point: &Point, map: &HeightMap) -> bool {
     let (x, y) = point;
     let height = map[*y as usize][*x as usize];
 
-    for (a, b) in OFFSETS.iter() {
-        let (xx, yy) = (x + a, y + b);
-
-        if valid_point(xx, yy) {
-            if map[yy as usize][xx as usize] <= height {
-                return false;
-            }
+    for (x, y) in valid_neighbors(point) {
+        if map[y as usize][x as usize] <= height {
+            return false;
         }
     }
 
@@ -56,6 +96,16 @@ fn is_local_minimum(point: &Point, map: &HeightMap) -> bool {
 
 fn risk_level(point: &Point, map: &HeightMap) -> isize {
     (map[point.1 as usize][point.0 as usize] + 1) as isize
+}
+
+fn valid_neighbors(origin: &Point) -> Vec<Point> {
+    let (x, y) = origin;
+
+    OFFSETS
+        .iter()
+        .map(|(a, b)| (x + a, y + b))
+        .filter(|(x, y)| valid_point(*x, *y))
+        .collect()
 }
 
 fn valid_point(x: i8, y: i8) -> bool {
