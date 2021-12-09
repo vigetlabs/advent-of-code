@@ -26,6 +26,22 @@ class TestDay08(unittest.TestCase):
 
     # Part 2
 
+    def test_id_patterns(self):
+        actual = id_patterns(self.EXAMPLE_ENTRY)
+        expected = {
+            '0': 'cagedb',
+            '1': 'ab',
+            '2': 'gcdfa',
+            '3': 'fbcad',
+            '4': 'eafb',
+            '5': 'cdfbe',
+            '6': 'cdfgeb',
+            '7': 'dab',
+            '8': 'acedgfb',
+            '9': 'cefabd',
+        }
+        self.assertEqual(actual, expected)
+
     def test_read_output(self):
         actual = read_output(self.EXAMPLE_ENTRY)
         expected = 5353
