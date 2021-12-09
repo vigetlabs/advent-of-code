@@ -26,10 +26,10 @@ class TestDay08(unittest.TestCase):
 
     # Part 2
 
-    # def test_read_output(self):
-    #     actual = read_output(self.EXAMPLE_ENTRY)
-    #     expected = 5353
-    #     self.assertEqual(actual, expected)
+    def test_read_output(self):
+        actual = read_output(self.EXAMPLE_ENTRY)
+        expected = 5353
+        self.assertEqual(actual, expected)
 
     # def test_sum_output_values(self):
     #     actual = sum_output_values(self.EXAMPLE_INPUT)

@@ -49,13 +49,48 @@ def count_1_4_7_8(entries_lst):
 
 # Part 2
 
-# def id_1(digits_lst):
-#     pattern_1 = [i for i in digits_lst if len(i) == 2][0]
-#     pprint("1 is " + pattern_1)
-#     return pattern_1
+def id_1(digits_lst):
+    pattern_1 = [i for i in digits_lst if len(i) == 2][0]
+    pprint("1 is " + pattern_1)
+    return pattern_1
 
-# def read_output(entry):
-#     pattern 1 = id_1
+def id_4(digits_lst):
+    pattern_4 = [i for i in digits_lst if len(i) == 4][0]
+    pprint("4 is " + pattern_4)
+    return pattern_4
+
+def id_7(digits_lst):
+    pattern_7 = [i for i in digits_lst if len(i) == 3][0]
+    pprint("7 is " + pattern_7)
+    return pattern_7
+
+def id_8(digits_lst):
+    pattern_8 = [i for i in digits_lst if len(i) == 7][0]
+    pprint("8 is " + pattern_8)
+    return pattern_8
+
+def id_pattern(digits_lst, number):
+    match number:
+        case 1:
+            return id_1(digits_lst)
+        case 4:
+            return id_4(digits_lst)
+        case 7:
+            return id_7(digits_lst)
+        case 8:
+            return id_8(digits_lst)
+        case _:
+            pprint(f'cannot id pattern for {number}.')
+            return "UNKNOWN"
+
+def read_output(entry):
+    sps, ovs = split_entry(entry)
+    for i in range(0,10):
+        pattern = id_pattern(sps, i)
+        ovs = [pattern if i == pattern else i for i in ovs]
+    result = " ".join([str(i) for i in ovs])
+    pprint(result)
+    return result
 
 
 def sum_output_values(entries_lst):
