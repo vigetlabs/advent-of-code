@@ -15,9 +15,18 @@ class TestDay08(unittest.TestCase):
         "gcafb gcf dcaebfg ecagb gf abcdeg gaef cafbge fdbac fegbdc | fgae cfgab fg bagce",
     ]
 
+    # Part 1
+
     def test_count_1_4_7_8(self):
         actual = count_1_4_7_8(self.EXAMPLE_INPUT)
         expected = 26
+        self.assertEqual(actual, expected)
+
+    # Part 2
+
+    def test_sum_output_values(self):
+        actual = sum_output_values(self.EXAMPLE_INPUT)
+        expected = 61229
         self.assertEqual(actual, expected)
 
 if __name__ == '__main__':

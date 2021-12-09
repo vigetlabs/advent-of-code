@@ -44,6 +44,11 @@ def count_1_4_7_8(entries_lst):
     output_values = get_output_values(entries_lst)
     return sum([count_1_4_7_8_digits(digits_lst) for digits_lst in output_values])
 
+# Part 2
+
+def sum_output_values(entries_lst):
+    return 0
+
 # Write solution
 
 if __name__ == '__main__':
