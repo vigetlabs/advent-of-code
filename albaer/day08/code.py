@@ -57,8 +57,16 @@ def id_0(digits_lst):
 def id_1(digits_lst):
     return [i for i in digits_lst if len(i) == 2][0]
 
+def id_3(digits_lst):
+    one_letters = list(id_1(digits_lst))
+    return [i for i in digits_lst if (len(i) == 5 and all(j in i for j in one_letters))][0]
+
 def id_4(digits_lst):
     return [i for i in digits_lst if len(i) == 4][0]
+
+def id_5(digits_lst):
+    nine_pattern = id_9(digits_lst)
+    return [i for i in digits_lst if (len(i) == 5 and all(j in nine_pattern for j in list(i)))][0]
 
 def id_6(digits_lst):
     nine_pattern = id_9(digits_lst)
@@ -81,8 +89,12 @@ def id_pattern(digits_lst, number):
             return id_0(digits_lst)
         case 1:
             return id_1(digits_lst)
+        case 3:
+            return id_3(digits_lst)
         case 4:
             return id_4(digits_lst)
+        case 5:
+            return id_5(digits_lst)
         case 6:
             return id_6(digits_lst)
         case 7:
