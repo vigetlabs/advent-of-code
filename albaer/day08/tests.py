@@ -29,16 +29,16 @@ class TestDay08(unittest.TestCase):
     def test_id_patterns(self):
         actual = id_patterns(self.EXAMPLE_ENTRY)
         expected = {
-            '0': 'cagedb',
-            '1': 'ab',
-            '2': 'gcdfa',
-            '3': 'fbcad',
-            '4': 'eafb',
-            '5': 'cdfbe',
-            '6': 'cdfgeb',
-            '7': 'dab',
-            '8': 'acedgfb',
-            '9': 'cefabd',
+            'cagedb': '0',
+            'ab': '1',
+            'gcdfa': '2',
+            'fbcad': '3',
+            'eafb': '4',
+            'cdfbe': '5',
+            'cdfgeb': '6',
+            'dab': '7',
+            'acedgfb': '8',
+            'cefabd': '9',
         }
         self.assertEqual(actual, expected)
 

@@ -57,6 +57,11 @@ def id_0(digits_lst):
 def id_1(digits_lst):
     return [i for i in digits_lst if len(i) == 2][0]
 
+def id_2(digits_lst):
+    three_pattern = id_3(digits_lst)
+    five_pattern = id_5(digits_lst)
+    return [i for i in digits_lst if (len(i) == 5 and i != three_pattern and i != five_pattern)][0]
+
 def id_3(digits_lst):
     one_letters = list(id_1(digits_lst))
     return [i for i in digits_lst if (len(i) == 5 and all(j in i for j in one_letters))][0]
@@ -84,41 +89,22 @@ def id_9(digits_lst):
     return [i for i in digits_lst if (len(i) == 6 and all(j in i for j in four_letters))][0]
 
 def id_pattern(digits_lst, number):
-    match number:
-        case 0:
-            return id_0(digits_lst)
-        case 1:
-            return id_1(digits_lst)
-        case 3:
-            return id_3(digits_lst)
-        case 4:
-            return id_4(digits_lst)
-        case 5:
-            return id_5(digits_lst)
-        case 6:
-            return id_6(digits_lst)
-        case 7:
-            return id_7(digits_lst)
-        case 8:
-            return id_8(digits_lst)
-        case 9:
-            return id_9(digits_lst)
-        case _:
-            return "unknown"
+    function_name = "id_" + str(number)
+    return eval(function_name)(digits_lst)
 
 def id_patterns(entry):
     sps, ovs = split_entry(entry)
-    return {str(i) : id_pattern(sps, i) for i in range(10)}
+    result = {id_pattern(sps, i): str(i) for i in range(10)}
+    return result
 
 def read_output(entry):
     sps, ovs = split_entry(entry)
+    pprint(ovs)
     patterns = id_patterns(entry)
-    for number, pattern in patterns.items():
-        ovs = [number if i == pattern else i for i in ovs]
-    result = " ".join([str(i) for i in ovs])
-    pprint(result)
+    pprint(patterns)
+    replaced_output = [patterns[i] for i in ovs]
+    result = " ".join([str(i) for i in replaced_output])
     return result
-
 
 def sum_output_values(entries_lst):
     # pattern = [id_1(i["sps"]) for i in get_entries(entries_lst)]
