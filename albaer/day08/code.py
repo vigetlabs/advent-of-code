@@ -17,13 +17,16 @@ def split_inputs_from_first_line():
 
 # Part 1
 
+def split_entry(entry):
+    sp_str, ov_str = entry.split(" | ")
+    return [sp_str.split(" "), ov_str.split(" ")]
+
 def get_entries(entries_lst):
-    split_sps_ovs = [entry.split(" | ") for entry in entries_lst]
-    return [{"sps": i[0].split(" "), "ovs": i[1].split(" ")} for i in split_sps_ovs]
+    return [split_entry(entry) for entry in entries_lst]
 
 def get_output_values(entries_lst):
     entries = get_entries(entries_lst)
-    return [i["ovs"] for i in entries]
+    return [i[1] for i in entries]
 
 def count_1s(digits_lst):
     return sum(len(i) == 2 for i in digits_lst)
@@ -46,7 +49,18 @@ def count_1_4_7_8(entries_lst):
 
 # Part 2
 
+# def id_1(digits_lst):
+#     pattern_1 = [i for i in digits_lst if len(i) == 2][0]
+#     pprint("1 is " + pattern_1)
+#     return pattern_1
+
+# def read_output(entry):
+#     pattern 1 = id_1
+
+
 def sum_output_values(entries_lst):
+    # pattern = [id_1(i["sps"]) for i in get_entries(entries_lst)]
+
     return 0
 
 # Write solution
