@@ -35,11 +35,13 @@ pub fn part2(map: &HeightMap) -> usize {
     let mut basin_sizes: Vec<usize> = points_iter()
         .filter(|point| is_local_minimum(point, &map))
         .map(|point| find_basin(&point, &map))
-        .map(|basin| basin_size(&basin))
+        .map(|basin| basin.len())
         .collect::<Vec<usize>>();
 
     basin_sizes.sort();
-    basin_sizes[basin_sizes.len() - 3..].iter().product()
+    basin_sizes.reverse();
+
+    basin_sizes[..3].iter().product()
 }
 
 fn find_basin(origin: &Point, map: &HeightMap) -> Vec<Point> {
@@ -71,10 +73,6 @@ fn find_basin(origin: &Point, map: &HeightMap) -> Vec<Point> {
     }
 
     visited.into_iter().collect()
-}
-
-fn basin_size(basin: &[Point]) -> usize {
-    basin.len()
 }
 
 fn points_iter() -> impl Iterator<Item = Point> {
