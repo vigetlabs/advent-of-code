@@ -16,6 +16,8 @@ const width = 100
 const height = 100
 const filename = "input.txt"
 
+type Heightmap [height][width]Position
+
 type Position struct {
   x int
   y int
@@ -42,7 +44,7 @@ func main() {
   }
 
   solvePartOne(lowPoints)
-  solvePartTwo(heightmap, lowPoints)
+  // solvePartTwo(heightmap, lowPoints)
 }
 
 func solvePartOne(lowPoints []Position) {
@@ -53,7 +55,7 @@ func solvePartOne(lowPoints []Position) {
   fmt.Println("Part 1:", riskLevel)
 }
 
-func solvePartTwo(heightmap [height][width]Position, lowPoints []Position) {
+func solvePartTwo(heightmap Heightmap, lowPoints []Position) {
   basinSizes := make([]int, 0)
 
   for _, position := range lowPoints {
@@ -69,7 +71,7 @@ func solvePartTwo(heightmap [height][width]Position, lowPoints []Position) {
   fmt.Println("Part 2:", product)
 }
 
-func calculateBasinSize(heightmap [height][width]Position, position Position) int {
+func calculateBasinSize(heightmap Heightmap, position Position) int {
   basinPositions := make([]Position, 0)
   nextPositions := []Position{position}
 
@@ -80,7 +82,7 @@ func calculateBasinSize(heightmap [height][width]Position, position Position) in
   return len(basinPositions)
 }
 
-func expandBasin(heightmap [height][width]Position, basinPositions []Position, nextPositions []Position) ([]Position, []Position) {
+func expandBasin(heightmap Heightmap, basinPositions []Position, nextPositions []Position) ([]Position, []Position) {
   nextNeighbors := make([]Position, 0)
 
   for _, next := range nextPositions {
@@ -96,8 +98,8 @@ func expandBasin(heightmap [height][width]Position, basinPositions []Position, n
   return basinPositions, nextNeighbors
 }
 
-func loadHeightmap(ventLines []string) [height][width]Position {
-  var heightmap [height][width]Position
+func loadHeightmap(ventLines []string) Heightmap {
+  var heightmap Heightmap
 
   for y, line := range ventLines {
     ventReadings := strings.Split(line, "")
@@ -111,7 +113,7 @@ func loadHeightmap(ventLines []string) [height][width]Position {
   return heightmap
 }
 
-func isLowpoint(heightmap [height][width]Position, position Position) bool {
+func isLowpoint(heightmap Heightmap, position Position) bool {
   for _, neighbor := range position.neighbors(heightmap) {
     if neighbor.value <= position.value {
       // Found a neighbor who's equal or lower, return false
@@ -123,7 +125,7 @@ func isLowpoint(heightmap [height][width]Position, position Position) bool {
   return true
 }
 
-func (position *Position) neighbors(heightmap [height][width]Position) []Position {
+func (position *Position) neighbors(heightmap Heightmap) []Position {
   neighbors := make([]Position, 0)
 
   x := position.x
