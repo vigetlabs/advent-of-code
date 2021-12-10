@@ -44,7 +44,7 @@ func main() {
   }
 
   solvePartOne(lowPoints)
-  // solvePartTwo(heightmap, lowPoints)
+  solvePartTwo(heightmap, lowPoints)
 }
 
 func solvePartOne(lowPoints []Position) {
@@ -72,30 +72,22 @@ func solvePartTwo(heightmap Heightmap, lowPoints []Position) {
 }
 
 func calculateBasinSize(heightmap Heightmap, position Position) int {
-  basinPositions := make([]Position, 0)
+  basin := make([]Position, 0)
   nextPositions := []Position{position}
 
   for len(nextPositions) > 0 {
-    basinPositions, nextPositions = expandBasin(heightmap, basinPositions, nextPositions)
-  }
+    position, nextPositions = nextPositions[0], nextPositions[1:]
 
-  return len(basinPositions)
-}
+    basin = append(basin, position)
 
-func expandBasin(heightmap Heightmap, basinPositions []Position, nextPositions []Position) ([]Position, []Position) {
-  nextNeighbors := make([]Position, 0)
-
-  for _, next := range nextPositions {
-    basinPositions = append(basinPositions, next)
-
-    for _, neighbor := range next.neighbors(heightmap) {
-      if neighbor.value < 9 && !contains(basinPositions, neighbor) && !contains(nextNeighbors, neighbor) {
-        nextNeighbors = append(nextNeighbors, neighbor)
+    for _, neighbor := range position.neighbors(heightmap) {
+      if neighbor.value < 9 && !contains(basin, neighbor) && !contains(nextPositions, neighbor) {
+        nextPositions = append(nextPositions, neighbor)
       }
     }
   }
 
-  return basinPositions, nextNeighbors
+  return len(basin)
 }
 
 func loadHeightmap(ventLines []string) Heightmap {
