@@ -16,7 +16,8 @@ class TestDay08(unittest.TestCase):
     ]
 
     EXAMPLE_ENTRY = "acedgfb cdfbe gcdfa fbcad dab cefabd cdfgeb eafb cagedb ab | cdfeb fcadb cdfeb cdbaf"
-
+    EXAMPLE_ENTRY_2 = "aecbfdg fbg gf bafeg dbefa fcge gcbea fcaegb dgceab fcbdga | gecf egdcabf bgf bfgea"
+    EXAMPLE_ENTRY_3 = "gcafb gcf dcaebfg ecagb gf abcdeg gaef cafbge fdbac fegbdc | fgae cfgab fg bagce"
     # Part 1
 
     def test_count_1_4_7_8(self):
@@ -42,15 +43,25 @@ class TestDay08(unittest.TestCase):
         }
         self.assertEqual(actual, expected)
 
-    def test_read_output(self):
+    def test_read_output_1(self):
         actual = read_output(self.EXAMPLE_ENTRY)
         expected = 5353
         self.assertEqual(actual, expected)
 
-    # def test_sum_output_values(self):
-    #     actual = sum_output_values(self.EXAMPLE_INPUT)
-    #     expected = 61229
-    #     self.assertEqual(actual, expected)
+    def test_read_output_2(self):
+        actual = read_output(self.EXAMPLE_ENTRY_2)
+        expected = 4873
+        self.assertEqual(actual, expected)
+
+    def test_read_output_3(self):
+        actual = read_output(self.EXAMPLE_ENTRY_3)
+        expected = 4315
+        self.assertEqual(actual, expected)
+
+    def test_sum_output_values(self):
+        actual = sum_output_values(self.EXAMPLE_INPUT)
+        expected = 61229
+        self.assertEqual(actual, expected)
 
 if __name__ == '__main__':
     unittest.main()
