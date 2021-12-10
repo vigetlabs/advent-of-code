@@ -4,15 +4,27 @@ import (
   "fmt"
   "os"
   "strings"
+  "sort"
 )
 
 var openers = []string{"(", "[", "{", "<"}
-var closers = []string{")", "]", "}", ">"}
-var scores = map[string]int {
+var closers = map[string]string {
+  "(" : ")",
+  "[" : "]",
+  "{" : "}",
+  "<" : ">",
+}
+var invalidScores = map[string]int {
   ")" : 3,
   "]" : 57,
   "}" : 1197,
   ">" : 25137,
+}
+var closingScores = map[string]int {
+  ")" : 1,
+  "]" : 2,
+  "}" : 3,
+  ">" : 4,
 }
 
 // const debug = true
@@ -27,7 +39,8 @@ func main() {
   trimmedData := strings.Trim(string(data), "\n ")
   lines := strings.Split(trimmedData, "\n")
 
-  solvePartOne(lines)
+  // solvePartOne(lines)
+  solvePartTwo(lines)
 }
 
 func solvePartOne(lines []string) {
@@ -36,6 +49,20 @@ func solvePartOne(lines []string) {
     invalidSum += getInvalidScore(line)
   }
   fmt.Println("Part 1:", invalidSum)
+}
+
+func solvePartTwo(lines []string) {
+  missingClosers := make([]string, 0)
+  for _, line := range lines {
+    missing := findMissingClosers(line)
+    if missing != "" {
+      missingClosers = append(missingClosers, missing)
+    }
+  }
+
+  closingScores := calculateClosingScores(missingClosers)
+  sort.Ints(closingScores)
+  fmt.Println("Part 2:", closingScores[len(closingScores) / 2])
 }
 
 func getInvalidScore(line string) int {
@@ -52,7 +79,7 @@ func getInvalidScore(line string) int {
         openChunks = removeLast(openChunks)
       } else {
         if debug { fmt.Println("Found invalid:", ch) }
-        return scores[ch]
+        return invalidScores[ch]
       }
     }
   }
@@ -61,12 +88,64 @@ func getInvalidScore(line string) int {
   return 0
 }
 
+func findMissingClosers(line string) string {
+  if debug { fmt.Println("Parsing", line) }
+
+  characters := strings.Split(line, "")
+  openChunks := make([]string, 0)
+
+  for _, ch := range characters {
+    if isOpener(ch) {
+      openChunks = append(openChunks, ch)
+    } else {
+      if validClose(last(openChunks), ch) {
+        openChunks = removeLast(openChunks)
+      } else {
+        if debug { fmt.Println("Found invalid:", ch) }
+        return ""
+      }
+    }
+  }
+
+  if debug {
+    fmt.Println("Incomplete", openChunks)
+    fmt.Println("Closers   ", closersFor(openChunks))
+  }
+  return closersFor(openChunks)
+}
+
+func calculateClosingScores(missingClosers []string) []int {
+  scores := make([]int, 0)
+
+  for _, characters := range missingClosers {
+    score := 0
+    for _, ch := range strings.Split(characters, "") {
+      score *= 5
+      score += closingScores[ch]
+    }
+
+    scores = append(scores, score)
+  }
+
+  return scores
+}
+
+func closersFor(characters []string) string {
+  toReturn := ""
+  for i := len(characters) - 1; i >= 0; i-- {
+    opener := characters[i]
+    toReturn += closers[opener]
+  }
+
+  return toReturn
+}
+
 func isOpener(ch string) bool {
   return contains(openers, ch)
 }
 
 func validClose(opener string, prospect string) bool {
-  return indexOf(opener, openers) == indexOf(prospect, closers)
+  return closers[opener] == prospect
 }
 
 func last(slice []string) string {
@@ -85,13 +164,4 @@ func contains(slice []string, value string) bool {
   }
 
   return false
-}
-
-func indexOf(element string, data []string) (int) {
-  for k, v := range data {
-    if element == v {
-      return k
-    }
-  }
-  return -1
 }
