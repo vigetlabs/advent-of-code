@@ -7,20 +7,20 @@ import (
   "sort"
 )
 
-var openers = []string{"(", "[", "{", "<"}
-var closers = map[string]string {
+var OPENERS = []string{"(", "[", "{", "<"}
+var CLOSERS = map[string]string {
   "(" : ")",
   "[" : "]",
   "{" : "}",
   "<" : ">",
 }
-var invalidScores = map[string]int {
+var INVALID_SCORES = map[string]int {
   ")" : 3,
   "]" : 57,
   "}" : 1197,
   ">" : 25137,
 }
-var closingScores = map[string]int {
+var CLOSING_SCORES = map[string]int {
   ")" : 1,
   "]" : 2,
   "}" : 3,
@@ -79,7 +79,7 @@ func getInvalidScore(line string) int {
         openChunks = removeLast(openChunks)
       } else {
         if debug { fmt.Println("Found invalid:", ch) }
-        return invalidScores[ch]
+        return INVALID_SCORES[ch]
       }
     }
   }
@@ -121,7 +121,7 @@ func calculateClosingScores(missingClosers []string) []int {
     score := 0
     for _, ch := range strings.Split(characters, "") {
       score *= 5
-      score += closingScores[ch]
+      score += CLOSING_SCORES[ch]
     }
 
     scores = append(scores, score)
@@ -134,18 +134,18 @@ func closersFor(characters []string) string {
   toReturn := ""
   for i := len(characters) - 1; i >= 0; i-- {
     opener := characters[i]
-    toReturn += closers[opener]
+    toReturn += CLOSERS[opener]
   }
 
   return toReturn
 }
 
 func isOpener(ch string) bool {
-  return contains(openers, ch)
+  return contains(OPENERS, ch)
 }
 
 func validClose(opener string, prospect string) bool {
-  return closers[opener] == prospect
+  return CLOSERS[opener] == prospect
 }
 
 func last(slice []string) string {
