@@ -5,14 +5,20 @@ pub fn input_generator(input: &str) -> Vec<String> {
 
 #[aoc(day10, part1)]
 pub fn part1(lines: &[String]) -> usize {
-    lines.iter().map(score_line).sum()
+    lines
+        .iter()
+        .map(analyze)
+        .filter_map(AnalyzedLine::corrupted)
+        .map(score_symbol)
+        .sum()
 }
 
 #[aoc(day10, part2)]
 pub fn part2(lines: &[String]) -> usize {
     let mut scores: Vec<_> = lines
         .iter()
-        .filter_map(is_incomplete)
+        .map(analyze)
+        .filter_map(AnalyzedLine::incomplete)
         .map(completion_string)
         .map(score_completion)
         .collect();
@@ -21,70 +27,64 @@ pub fn part2(lines: &[String]) -> usize {
     scores[scores.len() / 2]
 }
 
-fn score_line(line: &String) -> usize {
-    let mut stack = Vec::with_capacity(line.len() / 2);
-    let mut chars = line.chars();
-
-    while let Some(char) = chars.next() {
-        match char {
-            ')' => match stack.pop() {
-                Some('(') => (),                  // match
-                Some(_) => return score_for(')'), // corrupted
-                None => return 0,                 // incomplete
-            },
-            ']' => match stack.pop() {
-                Some('[') => (),                  // match
-                Some(_) => return score_for(']'), // corrupted
-                None => return 0,                 // incomplete
-            },
-            '}' => match stack.pop() {
-                Some('{') => (),                  // match
-                Some(_) => return score_for('}'), // corrupted
-                None => return 0,                 // incomplete
-            },
-            '>' => match stack.pop() {
-                Some('<') => (),                  // match
-                Some(_) => return score_for('>'), // corrupted
-                None => return 0,                 // incomplete
-            },
-            c => stack.push(c),
-        }
-    }
-
-    0
+#[derive(Debug, PartialEq)]
+enum AnalyzedLine {
+    Incomplete(Vec<char>),
+    Corrupted(char),
+    Complete,
 }
 
-fn is_incomplete(line: &String) -> Option<Vec<char>> {
+impl AnalyzedLine {
+    fn incomplete(self) -> Option<Vec<char>> {
+        match self {
+            AnalyzedLine::Incomplete(stack) => Some(stack),
+            _ => None,
+        }
+    }
+
+    fn corrupted(self) -> Option<char> {
+        match self {
+            AnalyzedLine::Corrupted(last_char) => Some(last_char),
+            _ => None,
+        }
+    }
+}
+
+fn analyze(line: &String) -> AnalyzedLine {
     let mut stack = Vec::with_capacity(line.len() / 2);
     let mut chars = line.chars();
 
     while let Some(char) = chars.next() {
         match char {
             ')' => match stack.pop() {
-                Some('(') => (),            // match
-                Some(_) => return None,     // corrupted
-                None => return Some(stack), // incomplete
+                Some('(') => (),                                // match
+                Some(_) => return AnalyzedLine::Corrupted(')'), // corrupted
+                None => return AnalyzedLine::Incomplete(stack), // incomplete
             },
             ']' => match stack.pop() {
-                Some('[') => (),            // match
-                Some(_) => return None,     // corrupted
-                None => return Some(stack), // incomplete
+                Some('[') => (),                                // match
+                Some(_) => return AnalyzedLine::Corrupted(']'), // corrupted
+                None => return AnalyzedLine::Incomplete(stack), // incomplete
             },
             '}' => match stack.pop() {
-                Some('{') => (),            // match
-                Some(_) => return None,     // corrupted
-                None => return Some(stack), // incomplete
+                Some('{') => (),                                // match
+                Some(_) => return AnalyzedLine::Corrupted('}'), // corrupted
+                None => return AnalyzedLine::Incomplete(stack), // incomplete
             },
             '>' => match stack.pop() {
-                Some('<') => (),            // match
-                Some(_) => return None,     // corrupted
-                None => return Some(stack), // incomplete
+                Some('<') => (),                                // match
+                Some(_) => return AnalyzedLine::Corrupted('>'), // corrupted
+                None => return AnalyzedLine::Incomplete(stack), // incomplete
             },
             c => stack.push(c),
         }
     }
 
-    Some(stack)
+    if stack.len() > 0 {
+        AnalyzedLine::Incomplete(stack)
+    } else {
+        AnalyzedLine::Complete
+    }
 }
 
 fn completion_string(chars: Vec<char>) -> String {
@@ -113,7 +113,7 @@ fn score_completion(completion: String) -> usize {
     })
 }
 
-fn score_for(symbol: char) -> usize {
+fn score_symbol(symbol: char) -> usize {
     match symbol {
         ')' => 3,
         ']' => 57,
@@ -126,4 +126,43 @@ fn score_for(symbol: char) -> usize {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn input() {
+        assert_eq!(input_generator("[{(\n(({[}{"), vec!["[{(", "(({[}{"]);
+    }
+
+    #[test]
+    fn analysis() {
+        assert_eq!(
+            analyze(&String::from("{([(<{}[<>[]}>{[]{[(<()>")),
+            AnalyzedLine::Corrupted('}')
+        );
+        assert_eq!(
+            analyze(&String::from("[({(<(())[]>[[{[]{<()<>>")),
+            AnalyzedLine::Incomplete(vec!['[', '(', '{', '(', '[', '[', '{', '{'])
+        );
+    }
+
+    #[test]
+    fn completion() {
+        assert_eq!(completion_string(vec!['(', '[', '{', '<']), ">}])");
+    }
+
+    #[test]
+    fn completion_score() {
+        assert_eq!(score_completion(String::from("}}]])})]")), 288957);
+        assert_eq!(score_completion(String::from(")}>]})")), 5566);
+        assert_eq!(score_completion(String::from("}}>}>))))")), 1480781);
+        assert_eq!(score_completion(String::from("]]}}]}]}>")), 995444);
+        assert_eq!(score_completion(String::from("])}>")), 294);
+    }
+
+    #[test]
+    fn symbol_score() {
+        assert_eq!(score_symbol(')'), 3);
+        assert_eq!(score_symbol(']'), 57);
+        assert_eq!(score_symbol('}'), 1197);
+        assert_eq!(score_symbol('>'), 25137);
+    }
 }
