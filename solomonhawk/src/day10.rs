@@ -10,7 +10,15 @@ pub fn part1(lines: &[String]) -> usize {
 
 #[aoc(day10, part2)]
 pub fn part2(lines: &[String]) -> usize {
-    0
+    let mut scores: Vec<_> = lines
+        .iter()
+        .filter_map(is_incomplete)
+        .map(completion_string)
+        .map(score_completion)
+        .collect();
+
+    scores.sort_unstable();
+    scores[scores.len() / 2]
 }
 
 fn score_line(line: &String) -> usize {
@@ -19,36 +27,90 @@ fn score_line(line: &String) -> usize {
 
     while let Some(char) = chars.next() {
         match char {
-            '(' => stack.push('('),
-            '[' => stack.push('['),
-            '{' => stack.push('{'),
-            '<' => stack.push('<'),
-
             ')' => match stack.pop() {
-                Some('(') => (),
-                Some(_) => return score_for(')'),
-                None => return 0,
+                Some('(') => (),                  // match
+                Some(_) => return score_for(')'), // corrupted
+                None => return 0,                 // incomplete
             },
             ']' => match stack.pop() {
-                Some('[') => (),
-                Some(_) => return score_for(']'),
-                None => return 0,
+                Some('[') => (),                  // match
+                Some(_) => return score_for(']'), // corrupted
+                None => return 0,                 // incomplete
             },
             '}' => match stack.pop() {
-                Some('{') => (),
-                Some(_) => return score_for('}'),
-                None => return 0,
+                Some('{') => (),                  // match
+                Some(_) => return score_for('}'), // corrupted
+                None => return 0,                 // incomplete
             },
             '>' => match stack.pop() {
-                Some('<') => (),
-                Some(_) => return score_for('>'),
-                None => return 0,
+                Some('<') => (),                  // match
+                Some(_) => return score_for('>'), // corrupted
+                None => return 0,                 // incomplete
             },
-            _ => panic!("Unknown character {}", char),
+            c => stack.push(c),
         }
     }
 
     0
+}
+
+fn is_incomplete(line: &String) -> Option<Vec<char>> {
+    let mut stack = Vec::with_capacity(line.len() / 2);
+    let mut chars = line.chars();
+
+    while let Some(char) = chars.next() {
+        match char {
+            ')' => match stack.pop() {
+                Some('(') => (),            // match
+                Some(_) => return None,     // corrupted
+                None => return Some(stack), // incomplete
+            },
+            ']' => match stack.pop() {
+                Some('[') => (),            // match
+                Some(_) => return None,     // corrupted
+                None => return Some(stack), // incomplete
+            },
+            '}' => match stack.pop() {
+                Some('{') => (),            // match
+                Some(_) => return None,     // corrupted
+                None => return Some(stack), // incomplete
+            },
+            '>' => match stack.pop() {
+                Some('<') => (),            // match
+                Some(_) => return None,     // corrupted
+                None => return Some(stack), // incomplete
+            },
+            c => stack.push(c),
+        }
+    }
+
+    Some(stack)
+}
+
+fn completion_string(chars: Vec<char>) -> String {
+    let mut completion = String::from("");
+
+    for c in chars.iter().rev() {
+        match c {
+            '(' => completion.push_str(")"),
+            '[' => completion.push_str("]"),
+            '{' => completion.push_str("}"),
+            '<' => completion.push_str(">"),
+            _ => panic!("Unknown completion string for {}", c),
+        }
+    }
+
+    completion
+}
+
+fn score_completion(completion: String) -> usize {
+    completion.chars().fold(0, |acc, c| match c {
+        ')' => acc * 5 + 1,
+        ']' => acc * 5 + 2,
+        '}' => acc * 5 + 3,
+        '>' => acc * 5 + 4,
+        _ => panic!("Unknown completion string for {}", c),
+    })
 }
 
 fn score_for(symbol: char) -> usize {
