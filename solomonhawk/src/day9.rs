@@ -51,22 +51,21 @@ fn find_basin(origin: &Point, map: &HeightMap) -> Vec<Point> {
     visited.insert(*origin);
 
     while candidates.len() > 0 {
-        // grab first candidate as center point, get height
+        // grab first candidate as center point
         let point = candidates.swap_remove(0);
-        let height = map[point.1 as usize][point.0 as usize];
 
         // mark this candidate as visited
         visited.insert(point);
 
-        // iterate over the neighbors, filtering out those that are height 9, or not higher than the current point
+        // iterate over the neighbors, filtering out those that are height 9
         for (x, y) in valid_neighbors(&point) {
-            let neighbor_height = map[y as usize][x as usize];
-
-            if visited.contains(&(x, y)) || neighbor_height <= height || neighbor_height == 9 {
+            if visited.contains(&(x, y)) || map[y as usize][x as usize] == 9 {
                 continue;
             }
 
-            // add each higher neighbor as a new candidate to traverse
+            // add each neighbor as a new candidate to traverse, make
+            // sure we don't add the same candidate more than once
+            visited.insert((x, y));
             candidates.push((x, y));
         }
     }
