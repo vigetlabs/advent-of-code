@@ -73,7 +73,7 @@ fn analyze(line: &String) -> AnalyzedLine {
 }
 
 fn completion_string(chars: Vec<char>) -> String {
-    let mut completion = String::from("");
+    let mut completion = String::with_capacity(chars.len());
 
     for c in chars.iter().rev() {
         match c {
