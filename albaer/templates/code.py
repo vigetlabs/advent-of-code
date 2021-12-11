@@ -17,6 +17,9 @@ def split_inputs_from_first_line():
 
 # Part 1
 
+def some_method(_):
+    return 0
+
 
 # Write solution
 
