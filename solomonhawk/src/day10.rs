@@ -54,27 +54,12 @@ fn analyze(line: &String) -> AnalyzedLine {
     let mut stack = Vec::with_capacity(line.len() / 2);
     let mut chars = line.chars();
 
-    while let Some(char) = chars.next() {
-        match char {
-            ')' => match stack.pop() {
-                Some('(') => (),                                // match
-                Some(_) => return AnalyzedLine::Corrupted(')'), // corrupted
-                None => return AnalyzedLine::Incomplete(stack), // incomplete
-            },
-            ']' => match stack.pop() {
-                Some('[') => (),                                // match
-                Some(_) => return AnalyzedLine::Corrupted(']'), // corrupted
-                None => return AnalyzedLine::Incomplete(stack), // incomplete
-            },
-            '}' => match stack.pop() {
-                Some('{') => (),                                // match
-                Some(_) => return AnalyzedLine::Corrupted('}'), // corrupted
-                None => return AnalyzedLine::Incomplete(stack), // incomplete
-            },
-            '>' => match stack.pop() {
-                Some('<') => (),                                // match
-                Some(_) => return AnalyzedLine::Corrupted('>'), // corrupted
-                None => return AnalyzedLine::Incomplete(stack), // incomplete
+    while let Some(symbol) = chars.next() {
+        match symbol {
+            c if is_closing_symbol(c) => match stack.pop() {
+                Some(b) if c == matching_closing_symbol(b) => (),
+                Some(_) => return AnalyzedLine::Corrupted(c),
+                None => return AnalyzedLine::Incomplete(stack),
             },
             c => stack.push(c),
         }
@@ -120,6 +105,20 @@ fn score_symbol(symbol: char) -> usize {
         '}' => 1197,
         '>' => 25137,
         _ => panic!("No score for {}", symbol),
+    }
+}
+
+fn is_closing_symbol(symbol: char) -> bool {
+    symbol == ')' || symbol == ']' || symbol == '}' || symbol == '>'
+}
+
+fn matching_closing_symbol(symbol: char) -> char {
+    match symbol {
+        '(' => ')',
+        '[' => ']',
+        '{' => '}',
+        '<' => '>',
+        _ => panic!("No matching closing symbol for {}", symbol),
     }
 }
 
