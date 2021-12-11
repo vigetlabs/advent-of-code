@@ -54,21 +54,34 @@ def check_pair(pair):
     valid_close_char = VALID_PAIRS[open_char]
     return close_char == valid_close_char
 
-def calculate_syntax_points(line):
+def analyze_line(line):
+    # All pairs removed => valid line
     if line == "":
-        return 0
+        return ["valid", line]
 
     m = re.search(PAIR_PATTERN, line)
-
     if m:
         pair = m.group(0)
         pair_is_valid = check_pair(pair)
 
+    # Valid pair => Remove it and find the next one
         if pair_is_valid:
             new_line = line.replace(pair, "")
-            return calculate_syntax_points(new_line)
+            return analyze_line(new_line)
         else:
-            return SYNTAX_POINTS[pair[1]]
+    # Invalid pair => Line is corrupt
+            return ["corrupt", line]
+    else:
+    # Incomplete line
+        return ["incomplete", line]
+
+def calculate_syntax_points(line):
+    state, remaining = analyze_line(line)
+
+    if state == "corrupt":
+        m = re.search(PAIR_PATTERN, remaining)
+        pair = m.group(0)
+        return SYNTAX_POINTS[pair[1]]
     else:
         return 0
 
@@ -77,26 +90,18 @@ def total_syntax_points(lines):
 
 # Part 2
 
+def completion_string(line):
+    open_chars = list(line)
+    close_chars = [VALID_PAIRS[i] for i in open_chars][::-1]
+    return "".join(close_chars)
+
 def find_completion_string(line):
-    if line == "":
-        return ""
+    state, remaining = analyze_line(line)
 
-    m = re.search(PAIR_PATTERN, line)
-
-    if m:
-        pair = m.group(0)
-        pair_is_valid = check_pair(pair)
-
-        if pair_is_valid:
-            new_line = line.replace(pair, "")
-            return find_completion_string(new_line)
-        else:
-            return ""
+    if state == "incomplete":
+        return completion_string(remaining)
     else:
-        open_chars = list(line)
-        close_chars = [VALID_PAIRS[i] for i in open_chars][::-1]
-        completion_string = "".join(close_chars)
-        return completion_string
+        return ""
 
 def score_completion_string(completion_string, score=0):
     if completion_string == "":
