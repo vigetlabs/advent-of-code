@@ -55,13 +55,14 @@ fn analyze(line: &String) -> AnalyzedLine {
     let mut chars = line.chars();
 
     while let Some(symbol) = chars.next() {
-        match symbol {
-            c if is_closing_symbol(c) => match stack.pop() {
-                Some(b) if c == matching_closing_symbol(b) => (),
-                Some(_) => return AnalyzedLine::Corrupted(c),
+        if is_closing_symbol(symbol) {
+            match stack.pop() {
+                Some(b) if symbol == matching_closing_symbol(b) => (),
+                Some(_) => return AnalyzedLine::Corrupted(symbol),
                 None => return AnalyzedLine::Incomplete(stack),
-            },
-            c => stack.push(c),
+            }
+        } else {
+            stack.push(symbol)
         }
     }
 
