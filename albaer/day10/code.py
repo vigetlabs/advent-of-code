@@ -16,7 +16,7 @@ def split_inputs_from_first_line():
     first_line_as_str = input_lines[0]
     return first_line_as_str.split(",")
 
-# Part 1
+# Constants
 
 VALID_PAIRS = {
   "{": "}",
@@ -25,7 +25,7 @@ VALID_PAIRS = {
   "(": ")",
 }
 
-POINTS = {
+SYNTAX_POINTS = {
     ")": 3,
     "]": 57,
     "}": 1197,
@@ -39,45 +39,57 @@ COMPLETION_POINTS = {
     ">": 4,
 }
 
+PAIR_PATTERN = r"([\{\[\(\<])([\}\]\)\>])"
+
+# Utilities
+
+def middle_element(lst):
+    middle_index = int((len(lst) - 1)/2)
+    return lst[middle_index]
+
+# Part 1
+
+def check_pair(pair):
+    open_char, close_char = list(pair)
+    valid_close_char = VALID_PAIRS[open_char]
+    return close_char == valid_close_char
+
 def calculate_syntax_points(line):
     if line == "":
         return 0
 
-    pattern = r"([\{\[\(\<])([\}\]\)\>])"
-    m = re.search(pattern, line)
+    m = re.search(PAIR_PATTERN, line)
 
     if m:
         pair = m.group(0)
-        open_char = m.group(1)
-        close_char = m.group(2)
-        valid_close_char = VALID_PAIRS[open_char]
+        pair_is_valid = check_pair(pair)
 
-        if close_char == valid_close_char:
-            return calculate_syntax_points(line.replace(pair, ""))
+        if pair_is_valid:
+            new_line = line.replace(pair, "")
+            return calculate_syntax_points(new_line)
         else:
-            return POINTS[close_char]
+            return SYNTAX_POINTS[pair[1]]
     else:
         return 0
 
 def total_syntax_points(lines):
     return sum([calculate_syntax_points(i) for i in lines])
+
 # Part 2
 
 def find_completion_string(line):
     if line == "":
         return ""
 
-    pattern = r"([\{\[\(\<])([\}\]\)\>])"
-    m = re.search(pattern, line)
+    m = re.search(PAIR_PATTERN, line)
 
     if m:
         pair = m.group(0)
-        open_char = m.group(1)
-        close_char = m.group(2)
-        valid_close_char = VALID_PAIRS[open_char]
+        pair_is_valid = check_pair(pair)
 
-        if close_char == valid_close_char:
-            return find_completion_string(line.replace(pair, ""))
+        if pair_is_valid:
+            new_line = line.replace(pair, "")
+            return find_completion_string(new_line)
         else:
             return ""
     else:
@@ -101,8 +113,7 @@ def score_completion_line(line):
 def score_completion_lines(lst):
     completion_scores = [score_completion_line(i) for i in lst]
     sorted_scores = sorted([i for i in completion_scores if i != 0])
-    middle_index = int((len(sorted_scores) - 1)/2)
-    return sorted_scores[middle_index]
+    return middle_element(sorted_scores)
 
 # Write solution
 
