@@ -1,7 +1,7 @@
 const X: i8 = 10;
 const Y: i8 = 10;
 
-type OctopusMap = [[i8; X as usize]; Y as usize];
+type OctopusMap = [[u8; X as usize]; Y as usize];
 type Point = (i8, i8);
 
 // (x, y)
@@ -22,7 +22,7 @@ fn input_generator(input: &str) -> OctopusMap {
 
     for (y, line) in input.split("\n").enumerate() {
         for (x, n) in line.bytes().enumerate() {
-            result[y][x] = (n - 48) as i8;
+            result[y][x] = (n - 48) as u8;
         }
     }
 
