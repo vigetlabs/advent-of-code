@@ -1,9 +1,7 @@
-use std::collections::HashSet;
-
 const X: i8 = 10;
 const Y: i8 = 10;
 
-type OctopusMap = [[i8; Y as usize]; X as usize];
+type OctopusMap = [[i8; X as usize]; Y as usize];
 type Point = (i8, i8);
 
 // (x, y)
@@ -53,22 +51,25 @@ fn part2(map: &OctopusMap) -> usize {
 }
 
 fn step_map(map: &mut OctopusMap) -> usize {
-    let mut flashed: HashSet<Point> = HashSet::new();
+    let mut flashed = [[0; Y as usize]; X as usize];
 
     for point in points_iter() {
         step_octopus(&point, map, &mut flashed);
     }
 
-    flashed.len()
+    flashed
+        .iter()
+        .flat_map(|r| r.iter().map(|v| *v as usize))
+        .sum()
 }
 
-fn step_octopus(point: &Point, map: &mut OctopusMap, flashed: &mut HashSet<Point>) {
+fn step_octopus(point: &Point, map: &mut OctopusMap, flashed: &mut OctopusMap) {
+    let (x, y) = point;
+
     // skip this octopus if it already flashed this step
-    if flashed.contains(point) {
+    if flashed[*y as usize][*x as usize] == 1 {
         return;
     }
-
-    let (x, y) = point;
 
     // increment
     map[*y as usize][*x as usize] += 1;
@@ -76,7 +77,7 @@ fn step_octopus(point: &Point, map: &mut OctopusMap, flashed: &mut HashSet<Point
     // handle flash
     if map[*y as usize][*x as usize] == 10 {
         // ensure this octopus doesn't flash twice in one step
-        flashed.insert(*point);
+        flashed[*y as usize][*x as usize] = 1;
 
         // for each neighboring octopus, step
         for (nx, ny) in valid_neighbors(point) {
