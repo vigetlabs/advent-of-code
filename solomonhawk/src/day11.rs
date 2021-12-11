@@ -59,8 +59,8 @@ fn step_map(map: &mut OctopusMap) -> usize {
 
     flashed
         .iter()
-        .flat_map(|r| r.iter().map(|v| *v as usize))
-        .sum()
+        .flat_map(|r| r.iter().filter(|&v| *v == 1))
+        .count()
 }
 
 fn step_octopus(point: &Point, map: &mut OctopusMap, flashed: &mut OctopusMap) {
