@@ -62,7 +62,7 @@ fn part1(lines: &[Entry]) -> usize {
 
 #[aoc(day8, part2)]
 fn part2(lines: &[Entry]) -> usize {
-    lines.to_vec().iter().map(decode_line).sum()
+    lines.iter().map(decode_line).sum()
 }
 
 fn decode_line(entry: &Entry) -> usize {
