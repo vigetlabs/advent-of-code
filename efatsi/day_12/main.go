@@ -20,22 +20,40 @@ func main() {
 
   caveMap := loadCaveMap(lines)
   solvePartOne(caveMap)
+  solvePartTwo(caveMap)
 }
 
 func solvePartOne(caveMap CaveMap) {
   var paths []string
   current := []string{"start"}
 
-  commenceWalking(caveMap, &paths, current)
+  commenceWalking(caveMap, &paths, current, shouldPassOne)
 
-  fmt.Println("path count:", len(paths))
+  fmt.Println("Part 1:", len(paths))
 }
 
-func commenceWalking(caveMap CaveMap, paths *[]string, current []string) {
+func solvePartTwo(caveMap CaveMap) {
+  var paths []string
+  current := []string{"start"}
+
+  commenceWalking(caveMap, &paths, current, shouldPassTwo)
+
+  fmt.Println("Part 2:", len(paths))
+}
+
+func shouldPassOne(current []string, next string) bool {
+  return smallCave(next) && contains(current, next)
+}
+
+func shouldPassTwo(current []string, next string) bool {
+  return next == "start" || (smallCave(next) && hasTwoSmalls(current) && contains(current, next))
+}
+
+func commenceWalking(caveMap CaveMap, paths *[]string, current []string, shouldPass func([]string, string) bool) {
   options := caveMap[last(current)]
 
   for _, next := range options {
-    if smallCave(next) && contains(current, next) {
+    if shouldPass(current, next) {
       continue
     }
 
@@ -44,7 +62,7 @@ func commenceWalking(caveMap CaveMap, paths *[]string, current []string) {
     if next == "end" {
       *paths = append(*paths, joinPath(newPath))
     } else {
-      commenceWalking(caveMap, paths, newPath)
+      commenceWalking(caveMap, paths, newPath, shouldPass)
     }
   }
 }
@@ -86,6 +104,23 @@ func last(slice []string) string {
 
 func joinPath(str []string) string {
   return strings.Trim(strings.Join(str, ","), "[]")
+}
+
+func hasTwoSmalls(current []string) bool {
+  smallCounts := make(map[string]int)
+
+  for _, caveName := range current {
+    if smallCave(caveName) {
+       _, exists := smallCounts[caveName]
+      if exists {
+        return true
+      } else {
+        smallCounts[caveName] = 1
+      }
+    }
+  }
+
+  return false
 }
 
 func contains(slice []string, value string) bool {
