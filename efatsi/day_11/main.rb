@@ -3,12 +3,13 @@ require 'pry'
 DIMENSION = 10
 
 class Day10
-  attr_reader :positions, :debug, :flash_count
+  attr_reader :positions, :debug, :flash_count, :iteration_flash_count
 
   def initialize(filename, debug)
     @debug = debug
     @positions = []
     @flash_count = 0
+    @iteration_flash_count = 0
     load_positions(filename)
   end
 
@@ -17,11 +18,8 @@ class Day10
   end
 
   def iterate
+    @iteration_flash_count = 0
     flashers = []
-
-    debug && p("before step")
-    debug && print_positions
-
 
     DIMENSION.times.each do |y|
       DIMENSION.times.each do |x|
@@ -30,20 +28,14 @@ class Day10
         position.value += 1
         if position.flashed?
           @flash_count += 1
+          @iteration_flash_count += 1
           flashers << position
         end
       end
     end
 
-    debug && p("just bumped")
-    debug && print_positions
-
     while flashers.length > 0
-      debug && p("flashers: #{flashers}")
-
       flasher = flashers.shift
-
-      debug && p("flashing: #{flasher.inspect}")
 
       flasher.neighbors(positions).each do |position|
         next if position.flashed?
@@ -51,15 +43,11 @@ class Day10
         position.value += 1
         if position.flashed?
           @flash_count += 1
+          @iteration_flash_count += 1
           flashers << position
         end
       end
-
-      debug && print_positions
     end
-
-    debug && p("just checked flashers")
-    debug && print_positions
   end
 
   def print_positions
@@ -140,7 +128,23 @@ end
 
 filename = "input.txt"
 debug = false
+
+# Part 1
+# @d = Day10.new(filename, debug)
+# 100.times { @d.run }
+# @d.print_positions
+# puts "Flash count: #{@d.flash_count}"
+
+# Part 2
 @d = Day10.new(filename, debug)
-100.times { @d.run }
-@d.print_positions
-puts "Flash count: #{@d.flash_count}"
+all_flashed = false
+step = 0
+while !all_flashed do
+  step += 1
+  @d.run
+
+  if @d.iteration_flash_count == DIMENSION * DIMENSION
+    all_flashed = true
+    puts "Steps to synchronisity: #{step}"
+  end
+end
