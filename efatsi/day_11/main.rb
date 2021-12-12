@@ -8,45 +8,41 @@ class Day10
   def initialize(filename, debug)
     @debug = debug
     @positions = []
+    @flashers = []
     @flash_count = 0
     @iteration_flash_count = 0
-    load_positions(filename)
-  end
 
-  def run
-    iterate
+    load_positions(filename)
   end
 
   def iterate
     @iteration_flash_count = 0
-    flashers = []
+    @flashers = []
 
     DIMENSION.times.each do |y|
       DIMENSION.times.each do |x|
         position = positions[y][x]
-
-        position.value += 1
-        if position.flashed?
-          @flash_count += 1
-          @iteration_flash_count += 1
-          flashers << position
-        end
+        bump_position(position)
       end
     end
 
-    while flashers.length > 0
-      flasher = flashers.shift
+    while @flashers.length > 0
+      flasher = @flashers.shift
 
       flasher.neighbors(positions).each do |position|
         next if position.flashed?
-
-        position.value += 1
-        if position.flashed?
-          @flash_count += 1
-          @iteration_flash_count += 1
-          flashers << position
-        end
+        bump_position(position)
       end
+    end
+  end
+
+  def bump_position(position)
+    position.value += 1
+
+    if position.flashed?
+      @flash_count += 1
+      @iteration_flash_count += 1
+      @flashers << position
     end
   end
 
@@ -131,7 +127,7 @@ debug = false
 
 # Part 1
 # @d = Day10.new(filename, debug)
-# 100.times { @d.run }
+# 100.times { @d.iterate }
 # @d.print_positions
 # puts "Flash count: #{@d.flash_count}"
 
@@ -141,7 +137,7 @@ all_flashed = false
 step = 0
 while !all_flashed do
   step += 1
-  @d.run
+  @d.iterate
 
   if @d.iteration_flash_count == DIMENSION * DIMENSION
     all_flashed = true
