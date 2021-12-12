@@ -4,10 +4,6 @@ use std::error::Error;
 use std::fmt;
 use std::str::FromStr;
 
-// find distinct paths
-// don't visit small caves more than once
-// big caves can be visited multiple times
-
 pub type CaveId = String;
 
 pub struct CaveSystem {
@@ -44,50 +40,31 @@ impl FromStr for CaveSystem {
     fn from_str(s: &str) -> Result<CaveSystem, Self::Err> {
         let mut caves: HashMap<String, Cave> = HashMap::new();
 
-        //     start
-        //     /   \
-        // c--A-----b--d
-        //     \   /
-        //      end
-
         for passage in s.split("\n") {
             let (source, dest) = passage.split_once("-").ok_or(CaveParseError)?;
 
-            let source_name = source.to_string();
-            let dest_name = dest.to_string();
-
-            if !caves.contains_key(source) {
-                caves.insert(
-                    source_name.clone(),
-                    Cave {
-                        id: source_name.clone(),
-                        size: cave_size(source),
-                        edges: vec![dest_name.clone()],
-                    },
-                );
-            } else {
-                if let Some(cave) = caves.get_mut(source) {
-                    cave.edges.push(dest.to_string());
-                }
-            }
-
-            if !caves.contains_key(dest) {
-                caves.insert(
-                    dest.to_string(),
-                    Cave {
-                        id: dest_name.clone(),
-                        size: cave_size(dest),
-                        edges: vec![source_name.clone()],
-                    },
-                );
-            } else {
-                if let Some(cave) = caves.get_mut(dest) {
-                    cave.edges.push(source.to_string());
-                }
-            }
+            insert_or_update(&mut caves, source, dest);
+            insert_or_update(&mut caves, dest, source);
         }
 
         Ok(CaveSystem { caves })
+    }
+}
+
+fn insert_or_update(caves: &mut HashMap<String, Cave>, source: &str, dest: &str) {
+    if !caves.contains_key(source) {
+        caves.insert(
+            source.to_string(),
+            Cave {
+                id: source.to_string(),
+                size: cave_size(&source),
+                edges: vec![dest.to_string()],
+            },
+        );
+    } else {
+        if let Some(cave) = caves.get_mut(source) {
+            cave.edges.push(dest.to_string());
+        }
     }
 }
 
@@ -105,6 +82,24 @@ pub fn part1(cave_system: &CaveSystem) -> usize {
         String::from("start"),
         &mut all_paths,
         &mut vec![],
+        1,
+        true,
+    );
+
+    all_paths.len()
+}
+
+#[aoc(day12, part2)]
+pub fn part2(cave_system: &CaveSystem) -> usize {
+    let mut all_paths: Vec<Vec<String>> = Vec::new();
+
+    build_paths(
+        &cave_system.caves,
+        String::from("start"),
+        &mut all_paths,
+        &mut vec![],
+        2,
+        false,
     );
 
     all_paths.len()
@@ -115,30 +110,50 @@ fn build_paths(
     cave_id: CaveId,
     all_paths: &mut Vec<Vec<String>>,
     path: &mut Vec<String>,
+    max_small_cave_visits: usize,
+    found_any_duplicate: bool,
 ) {
     let cave = caves.get(&cave_id).unwrap();
 
+    // add this cave to the path
     path.push(cave_id.clone());
 
+    // if it was the "end" cave, push the `path` to the result list and return
     if is_end(&cave) {
         all_paths.push(path.to_vec());
         return;
     }
 
+    // if we've added a duplicate small cave to the one we just added
+    let has_duplicate = is_duplicate_small_cave(&cave, path, max_small_cave_visits);
+
+    // recalculate max_visits, but only ever subtract 1 once
+    let max_visits = if !found_any_duplicate && has_duplicate {
+        max_small_cave_visits - 1
+    } else {
+        max_small_cave_visits
+    };
+
+    // for each connected cave
     for edge_id in cave.edges.iter() {
         let edge_cave = caves.get(edge_id).unwrap();
 
-        if is_start(&edge_cave) || is_duplicate_small_cave(&edge_cave, path.to_vec()) {
+        // if it's the "start" cave or a duplicate small cave (respecting max visits), skip it
+        if is_start(&edge_cave) || is_duplicate_small_cave(&edge_cave, path, max_visits) {
             continue;
         }
 
-        build_paths(caves, edge_id.to_string(), all_paths, &mut path.to_vec());
+        // continue building the path along this connection carrying forward the
+        // information about whether we've encountered a duplicate already
+        build_paths(
+            caves,
+            edge_id.to_string(),
+            all_paths,
+            &mut path.to_vec(),
+            max_visits,
+            found_any_duplicate || has_duplicate,
+        );
     }
-}
-
-#[aoc(day12, part2)]
-pub fn part2(cave_system: &CaveSystem) -> usize {
-    0
 }
 
 fn is_start(cave: &Cave) -> bool {
@@ -149,8 +164,8 @@ fn is_end(cave: &Cave) -> bool {
     cave.id == "end"
 }
 
-fn is_duplicate_small_cave(cave: &Cave, path: Vec<String>) -> bool {
-    cave.size == CaveSize::Small && path.contains(&cave.id)
+fn is_duplicate_small_cave(cave: &Cave, path: &Vec<String>, max_visits: usize) -> bool {
+    cave.size == CaveSize::Small && (path.iter().filter(|id| **id == cave.id).count() >= max_visits)
 }
 
 fn cave_size(s: &str) -> CaveSize {
@@ -162,11 +177,5 @@ fn cave_size(s: &str) -> CaveSize {
 }
 
 fn is_uppercase(s: &str) -> bool {
-    for c in s.chars() {
-        if !c.is_ascii_uppercase() {
-            return false;
-        }
-    }
-
-    true
+    s.chars().all(|c| c.is_ascii_uppercase())
 }
