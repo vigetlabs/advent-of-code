@@ -25,24 +25,30 @@ def split_inputs_from_first_line():
 # ...
 # Reset all >9s to 0
 
-def grid(string_grid):
-    return [list(string_row) for string_row in string_grid]
+def string_grid_to_int_grid(string_grid):
+    return [[int(i) for i in list(string_row)] for string_row in string_grid]
 
-def string_grid(grid):
-    return ["".join(str(j) for j in i) for i in grid]
+def int_grid_to_string_grid(int_grid):
+    return ["".join(str(j) for j in i) for i in int_grid]
 
-def printable_grid(grid):
-    return "\n".join(["".join(str(j) if j < 10 else "x" for j in i) for i in grid]) + "\n"
+def printable_char(char):
+    match char:
+        case 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9:
+            return str(char)
+        case 10:
+            return "x"
+        case _:
+            return "-"
 
-def add_one_to_row(row):
-    return [int(i) + 1 for i in row]
+def printable_grid(int_grid):
+    return "\n".join(["".join(printable_char(j) for j in i) for i in int_grid]) + "\n"
 
-def add_one_to_grid(grid):
-    return [add_one_to_row(row) for row in grid]
+def add_one_to_grid(int_grid):
+    return [[i + 1 for i in row] for row in int_grid]
 
-def in_grid(grid, coord):
-    max_x = len(grid[0])
-    max_y = len(grid)
+def in_grid(int_grid, coord):
+    max_x = len(int_grid[0])
+    max_y = len(int_grid)
     return coord[0] < max_x and coord[1] < max_y
 
 def adjacent_coords(grid, x, y):
@@ -51,6 +57,7 @@ def adjacent_coords(grid, x, y):
         [x - 1, y],
         [x - 1, y + 1],
         [x, y - 1],
+        [x, y],
         [x, y + 1],
         [x + 1, y - 1],
         [x + 1, y],
@@ -72,11 +79,11 @@ def flash_row(grid, x):
     return grid
 
 def flash_grid(grid, x=0):
+    print(printable_grid(grid))
     if x == len(grid):
         return grid
     else:
         new_grid = flash_row(grid, x)
-        print(printable_grid(new_grid))
         return flash_grid(new_grid, x + 1)
 
 def reset_row(row):
@@ -85,11 +92,11 @@ def reset_row(row):
 def reset_grid(grid):
     return [reset_row(row) for row in grid]
 
-def step(grid):
-    grid = add_one_to_grid(grid)
-    grid = flash_grid(grid)
-    grid = reset_grid(grid)
-    return string_grid(grid)
+def step(int_grid):
+    int_grid = add_one_to_grid(int_grid)
+    int_grid = flash_grid(int_grid)
+    int_grid = reset_grid(int_grid)
+    return int_grid_to_string_grid(int_grid)
 
 def count_zeroes(string_grid):
   return sum([i.count('0') for i in string_grid])
