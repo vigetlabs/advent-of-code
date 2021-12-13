@@ -63,11 +63,9 @@ def all_indices(lst):
     return [i for i in range(width * height)]
 
 def is_adjacent(lst, index_a, index_b):
-    width, height = get_dimensions(lst)
-    ax, ay = get_coords(index_a)
-    bx, by = get_coords(index_b)
-
-
+    ax, ay = get_coords(lst, index_a)
+    bx, by = get_coords(lst, index_b)
+    return (abs(ax - bx) <= 1) and (abs(ay - by) <= 1)
 
 
 # def is_adjacent(lst, index):

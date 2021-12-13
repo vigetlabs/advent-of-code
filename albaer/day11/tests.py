@@ -29,7 +29,32 @@ class TestDay11(unittest.TestCase):
         "5283751526",
     ]
 
-    # get_coords
+    # 3x4 Indices  Coordinates
+    # 00,01,02,03  00,01,02,03
+    # 04,05,06,07  10,11,12,13
+    # 08,09,10,11  20,21,22,23
+
+    def test_is_adjacent_small_after(self):
+        actual = is_adjacent(self.IRREGULAR_EXAMPLE_INPUT, 2, 3)
+        expected = True
+        self.assertEqual(actual, expected)
+
+    def test_is_adjacent_small_next_line(self):
+        actual = is_adjacent(self.IRREGULAR_EXAMPLE_INPUT, 3, 4)
+        expected = False
+        self.assertEqual(actual, expected)
+
+    def test_is_adjacent_small_below(self):
+        actual = is_adjacent(self.IRREGULAR_EXAMPLE_INPUT, 6, 10)
+        expected = True
+        self.assertEqual(actual, expected)
+
+    def test_is_adjacent_small_same(self):
+        actual = is_adjacent(self.IRREGULAR_EXAMPLE_INPUT, 11, 11)
+        expected = True
+        self.assertEqual(actual, expected)
+
+
 
     def test_get_coords_irregular_corner(self):
         actual = get_coords(self.IRREGULAR_EXAMPLE_INPUT, 0)
@@ -56,6 +81,35 @@ class TestDay11(unittest.TestCase):
         expected = [2,2]
         self.assertEqual(actual, expected)
 
+    # 5x5 Indices     Coordinates
+    # 00,01,02,03,04  00,01,02,03,04
+    # 05,06,07,08,09  10,11,12,13,14
+    # 10,11,12,13,14  20,21,22,23,24
+    # 15,16,17,18,19  30,31,32,33,34
+    # 20,21,22,23,24  40,41,42,43,44
+
+    def test_is_adjacent_small_below(self):
+        actual = is_adjacent(self.SMALL_EXAMPLE_INPUT, 3, 8)
+        expected = True
+        self.assertEqual(actual, expected)
+
+    def test_is_adjacent_small_next_line(self):
+        actual = is_adjacent(self.SMALL_EXAMPLE_INPUT, 14, 15)
+        expected = False
+        self.assertEqual(actual, expected)
+
+    def test_is_adjacent_small_same(self):
+        actual = is_adjacent(self.SMALL_EXAMPLE_INPUT, 19, 19)
+        expected = True
+        self.assertEqual(actual, expected)
+
+    def test_is_adjacent_small_after(self):
+        actual = is_adjacent(self.SMALL_EXAMPLE_INPUT, 22, 23)
+        expected = True
+        self.assertEqual(actual, expected)
+
+
+
     def test_get_coords_small_corner(self):
         actual = get_coords(self.SMALL_EXAMPLE_INPUT, 0)
         expected = [0,0]
@@ -79,6 +133,36 @@ class TestDay11(unittest.TestCase):
     def test_get_coords_small_bottom(self):
         actual = get_coords(self.SMALL_EXAMPLE_INPUT, 23)
         expected = [4,3]
+        self.assertEqual(actual, expected)
+
+
+    # 10x10 Indices/Coordinates
+    # 00,01,02,03,04,05,06,07,08,09
+    # 10,11,12,13,14,15,16,17,18,19
+    # 20,21,22,23,24,25,26,27,28,29
+    # 30,31,32,33,34,35,36,37,38,39
+    # ...
+    # 80,81,82,83,84,85,86,87,88,89
+    # 90,91,92,93,94,95,96,97,98,99
+
+    def test_is_adjacent_big_next_line(self):
+        actual = is_adjacent(self.EXAMPLE_INPUT, 29, 30)
+        expected = False
+        self.assertEqual(actual, expected)
+
+    def test_is_adjacent_big_above(self):
+        actual = is_adjacent(self.EXAMPLE_INPUT, 29, 19)
+        expected = True
+        self.assertEqual(actual, expected)
+
+    def test_is_adjacent_big_same(self):
+        actual = is_adjacent(self.EXAMPLE_INPUT, 86, 86)
+        expected = True
+        self.assertEqual(actual, expected)
+
+    def test_is_adjacent_big_after(self):
+        actual = is_adjacent(self.EXAMPLE_INPUT, 96, 97)
+        expected = True
         self.assertEqual(actual, expected)
 
     def test_get_coords_big_corner(self):
