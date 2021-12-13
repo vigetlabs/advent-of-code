@@ -25,89 +25,153 @@ def split_inputs_from_first_line():
 # ...
 # Reset all >9s to 0
 
-def string_grid_to_int_grid(string_grid):
-    return [[int(i) for i in list(string_row)] for string_row in string_grid]
+# 5x5 Indices     Coordinates
+# 00,01,02,03,04  00,01,02,03,04
+# 05,06,07,08,09  10,11,12,13,14
+# 10,11,12,13,14  20,21,22,23,24
+# 15,16,17,18,19  30,31,32,33,34
+# 20,21,22,23,24  40,41,42,43,44
 
-def int_grid_to_string_grid(int_grid):
-    return ["".join(str(j) for j in i) for i in int_grid]
+# 3x4 Indices  Coordinates
+# 00,01,02,03  00,01,02,03
+# 04,05,06,07  10,11,12,13
+# 08,09,10,11  20,21,22,23
 
-def printable_char(char):
-    match char:
-        case 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9:
-            return str(char)
-        case 10:
-            return "x"
-        case _:
-            return "-"
+# 10x10 Indices/Coordinates
+# 00,01,02,03,04,05,06,07,08,09
+# 10,11,12,13,14,15,16,17,18,19
+# 20,21,22,23,24,25,26,27,28,29
+# 30,31,32,33,34,35,36,37,38,39
+# ...
+# 80,81,82,83,84,85,86,87,88,89
+# 90,91,92,93,94,95,96,97,98,99
 
-def printable_grid(int_grid):
-    return "\n".join(["".join(printable_char(j) for j in i) for i in int_grid]) + "\n"
+def input_list_to_string_grid(lst):
+    "".join(lst)
 
-def add_one_to_grid(int_grid):
-    return [[i + 1 for i in row] for row in int_grid]
+def get_dimensions(lst):
+    return [len(lst[0]), len(lst)]
 
-def in_grid(int_grid, coord):
-    max_x = len(int_grid[0])
-    max_y = len(int_grid)
-    return coord[0] < max_x and coord[1] < max_y
+def on_same_row(lst, a, b):
+    width, height = get_dimensions(lst)
 
-def adjacent_coords(grid, x, y):
-    coords = [
-        [x - 1, y - 1],
-        [x - 1, y],
-        [x - 1, y + 1],
-        [x, y - 1],
-        [x, y],
-        [x, y + 1],
-        [x + 1, y - 1],
-        [x + 1, y],
-        [x + 1, y + 1],
-    ]
-    return [coord for coord in coords if in_grid(grid, coord)]
+def get_coords(lst, index):
+    width, _ = get_dimensions(lst)
+    return list(divmod(index, width))
 
-def flash_coord(grid, x, y):
-    adjacents = adjacent_coords(grid, x, y)
-    for coord in adjacents:
-        x, y = coord
-        grid[x][y] = int(grid[x][y]) + 1
-    return grid
+def all_indices(lst):
+    return [i for i in range(width * height)]
 
-def flash_row(grid, x):
-    for y, i in enumerate(grid[x]):
-        if i > 9:
-            grid = flash_coord(grid, x, y)
-    return grid
+def is_adjacent(lst, index_a, index_b):
+    width, height = get_dimensions(lst)
+    ax, ay = get_coords(index_a)
+    bx, by = get_coords(index_b)
 
-def flash_grid(grid, x=0):
-    print(printable_grid(grid))
-    if x == len(grid):
-        return grid
-    else:
-        new_grid = flash_row(grid, x)
-        return flash_grid(new_grid, x + 1)
 
-def reset_row(row):
-    return [0 if int(i) > 9 else int(i) for i in row]
 
-def reset_grid(grid):
-    return [reset_row(row) for row in grid]
 
-def step(int_grid):
-    int_grid = add_one_to_grid(int_grid)
-    int_grid = flash_grid(int_grid)
-    int_grid = reset_grid(int_grid)
-    return int_grid_to_string_grid(int_grid)
+# def is_adjacent(lst, index):
+#     width, height = get_dimensions(lst)
+#     x, y = get_coords(index)
 
-def count_zeroes(string_grid):
-  return sum([i.count('0') for i in string_grid])
+#     [i for i in range(width * height) if ]
 
-def go(grid, step_count=0, flash_count=0):
-    if step_count == 0:
-        return [grid, flash_count]
-    else:
-        new_grid = step(grid)
-        new_flash_count = flash_count + count_zeroes(new_grid)
-        go(new_grid, step_count - 1, new_flash_count)
+
+
+
+def adjacent(lst, index):
+    width, height = get_dimensions(lst)
+
+
+    above = index - width,
+    target = index
+    below = index + height
+
+    return [i for i in all_ints]
+
+# def string_grid_to_int_grid(string_grid):
+#     return [[int(i) for i in list(string_row)] for string_row in string_grid]
+
+# def int_grid_to_string_grid(int_grid):
+#     return ["".join(str(j) for j in i) for i in int_grid]
+
+# def printable_char(char):
+#     match char:
+#         case 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9:
+#             return str(char)
+#         case 10:
+#             return "x"
+#         case _:
+#             return "-"
+
+# def printable_grid(int_grid):
+#     return "\n".join(["".join(printable_char(j) for j in i) for i in int_grid]) + "\n"
+
+# def add_one_to_grid(int_grid):
+#     return [[i + 1 for i in row] for row in int_grid]
+
+# def in_grid(int_grid, coord):
+#     max_x = len(int_grid[0])
+#     max_y = len(int_grid)
+#     return coord[0] < max_x and coord[1] < max_y
+
+# def adjacent_coords(grid, x, y):
+#     coords = [
+#         [x - 1, y - 1],
+#         [x - 1, y],
+#         [x - 1, y + 1],
+#         [x, y - 1],
+#         [x, y],
+#         [x, y + 1],
+#         [x + 1, y - 1],
+#         [x + 1, y],
+#         [x + 1, y + 1],
+#     ]
+#     return [coord for coord in coords if in_grid(grid, coord)]
+
+# def flash_coord(grid, x, y):
+#     adjacents = adjacent_coords(grid, x, y)
+#     for coord in adjacents:
+#         x, y = coord
+#         grid[x][y] = int(grid[x][y]) + 1
+#     return grid
+
+# def flash_row(grid, x):
+#     for y, i in enumerate(grid[x]):
+#         if i > 9:
+#             grid = flash_coord(grid, x, y)
+#     return grid
+
+# def flash_grid(grid, x=0):
+#     print(printable_grid(grid))
+#     if x == len(grid):
+#         return grid
+#     else:
+#         new_grid = flash_row(grid, x)
+#         return flash_grid(new_grid, x + 1)
+
+# def reset_row(row):
+#     return [0 if int(i) > 9 else int(i) for i in row]
+
+# def reset_grid(grid):
+#     return [reset_row(row) for row in grid]
+
+# def step(int_grid):
+#     int_grid = add_one_to_grid(int_grid)
+#     int_grid = flash_grid(int_grid)
+#     int_grid = reset_grid(int_grid)
+#     return int_grid_to_string_grid(int_grid)
+
+# def count_zeroes(string_grid):
+#   return sum([i.count('0') for i in string_grid])
+
+# def go(grid, step_count=0, flash_count=0):
+#     if step_count == 0:
+#         return [grid, flash_count]
+#     else:
+#         new_grid = step(grid)
+#         new_flash_count = flash_count + count_zeroes(new_grid)
+#         go(new_grid, step_count - 1, new_flash_count)
 
 # Write solution
 
