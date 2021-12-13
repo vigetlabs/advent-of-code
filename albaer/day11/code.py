@@ -46,20 +46,49 @@ def split_inputs_from_first_line():
 # 80,81,82,83,84,85,86,87,88,89
 # 90,91,92,93,94,95,96,97,98,99
 
-def input_list_to_string_grid(lst):
-    "".join(lst)
+def flatten(lst):
+    return [item for sublist in lst for item in sublist]
+
+def slices(lst, n):
+    return[lst[i:i + n] for i in range(0, len(lst), n)]
+
+def get_int_lst(lst):
+    string_chars = flatten([list(row) for row in lst])
+    return [int(char) for char in string_chars]
+
+def get_string_lst(int_lst, width):
+    string_flat_list = [str(i) for i in int_lst]
+    string_sublists = slices(string_flat_list, width)
+    return ["".join(i) for i in string_sublists]
+
+def printable_char(char):
+    match char:
+        case 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9:
+            return str(char)
+        case 10:
+            return "x"
+        case _:
+            return "-"
+
+def printable_lst(lst, int_lst):
+    width, _ = get_dimensions(lst)
+    char_list = [printable_char(i) for i in int_lst]
+    char_sublists = slices(char_list, width)
+    char_strings = ["".join(i) for i in char_sublists]
+    return "\n".join(char_strings) + "\n"
+
+def print_lst(lst, int_lst):
+    print(printable_lst(lst, int_lst))
 
 def get_dimensions(lst):
     return [len(lst[0]), len(lst)]
-
-def on_same_row(lst, a, b):
-    width, height = get_dimensions(lst)
 
 def get_coords(lst, index):
     width, _ = get_dimensions(lst)
     return list(divmod(index, width))
 
 def all_indices(lst):
+    width, height = get_dimensions(lst)
     return [i for i in range(width * height)]
 
 def is_adjacent(lst, index_a, index_b):
@@ -67,25 +96,70 @@ def is_adjacent(lst, index_a, index_b):
     bx, by = get_coords(lst, index_b)
     return (abs(ax - bx) <= 1) and (abs(ay - by) <= 1)
 
+def adjacents(lst, index):
+    return [i for i in all_indices(lst) if is_adjacent(lst, i, index)]
 
-# def is_adjacent(lst, index):
+def add_one_to_all(int_lst):
+    return [i + 1 for i in int_lst]
+
+def flash_one(lst, int_lst, index):
+    width, _ = get_dimensions(lst)
+    adjacent_indexes = adjacents(lst, index)
+    new_int_lst = [i + 1 if (index in adjacent_indexes) else i for i, index in enumerate(int_lst)]
+    return new_int_lst
+
+def flash_grid(lst, int_lst):
+    width, _ = get_dimensions(lst)
+    if not 10 in int_lst:
+        return int_lst
+    else:
+        next_flash_index = int_lst.index(10)
+        new_int_lst = flash_one(lst, int_lst, next_flash_index)
+        return flash_grid(lst, new_int_lst)
+
+def reset_grid(int_lst):
+    return [0 if i > 9 else i for i in int_lst]
+
+def step(lst):
+    width, _ = get_dimensions(lst)
+    int_lst = get_int_lst(lst)
+    pprint("start")
+    print_lst(lst, int_lst)
+    int_lst = add_one_to_all(int_lst)
+    pprint("add one to all")
+    print_lst(lst, int_lst)
+    int_lst = flash_grid(lst, int_lst)
+    pprint("flash grid")
+    print_lst(lst, int_lst)
+    int_lst = reset_grid(int_lst)
+    pprint("reset_grid")
+    print_lst(lst, int_lst)
+    lst = get_string_lst(int_lst, width)
+    return lst
+
+def count_flashes_for_steps(lst, step_count, flash_count):
+    if step_count == 0:
+        return flash_count
+    else:
+        new_grid = step(lst)
+        new_flash_count = flash_count + new_grid.count(0)
+        return steps(new_grid, step_count - 1, new_flash_count)
+
+
+
+
+
+
+
+# def adjacent(lst, index):
 #     width, height = get_dimensions(lst)
-#     x, y = get_coords(index)
-
-#     [i for i in range(width * height) if ]
 
 
+#     above = index - width,
+#     target = index
+#     below = index + height
 
-
-def adjacent(lst, index):
-    width, height = get_dimensions(lst)
-
-
-    above = index - width,
-    target = index
-    below = index + height
-
-    return [i for i in all_ints]
+#     return [i for i in all_ints]
 
 # def string_grid_to_int_grid(string_grid):
 #     return [[int(i) for i in list(string_row)] for string_row in string_grid]
