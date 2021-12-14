@@ -42,7 +42,7 @@ impl FromStr for Fold {
         match axis {
             "y" => Ok(Fold::Vertical(amount.parse()?)),
             "x" => Ok(Fold::Horizontal(amount.parse()?)),
-            u => Err(Box::new(PaperParseError)),
+            _ => Err(Box::new(PaperParseError)),
         }
     }
 }
