@@ -62,22 +62,13 @@ fn part2(input: &(Template, InsertionRules)) -> usize {
 }
 
 fn initialize_mapping(template: &Template, insertion_rules: &InsertionRules) -> Mapping {
-    // chars appearing in rhs of rules
-    let mut rule_chars: Vec<char> = insertion_rules
-        .iter()
-        .map(|(_pattern, interstitial)| *interstitial)
-        .collect();
-
-    // all chars from template and rules (contains duplicates)
-    let mut all_chars = template.clone();
-    all_chars.append(&mut rule_chars);
-
     // create a mapping of all unique pairs of chars to their associated counts
     // { ['N', 'C']: 1, ['N', 'N']: 0, .. }
-    let mut mapping: Mapping = all_chars
+    let mut mapping: Mapping = insertion_rules
         .iter()
+        .flat_map(|(pattern, _)| pattern.clone())
         .unique()
-        .flat_map(|&c| vec![c, c])
+        .flat_map(|c| vec![c, c])
         .permutations(2)
         .unique()
         .map(|t| (t, 0))
