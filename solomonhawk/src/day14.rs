@@ -17,7 +17,7 @@ impl fmt::Display for ParseError {
 }
 
 type Template = Vec<char>;
-type InsertionRules = Vec<(Vec<char>, char)>;
+type InsertionRules = Vec<(Template, char)>;
 type Mapping = HashMap<Template, usize>;
 
 #[aoc_generator(day14)]
@@ -30,11 +30,7 @@ fn input_generator(input: &str) -> Result<(Template, InsertionRules), Box<dyn Er
 
         insertion_rules.push((
             pattern.chars().collect(),
-            *interstitial
-                .chars()
-                .collect::<Vec<char>>()
-                .first()
-                .ok_or(ParseError)?,
+            interstitial.chars().nth(0).ok_or(ParseError)?,
         ));
     }
 
@@ -43,8 +39,8 @@ fn input_generator(input: &str) -> Result<(Template, InsertionRules), Box<dyn Er
 
 #[aoc(day14, part1)]
 fn part1(input: &(Template, InsertionRules)) -> usize {
-    let (_template, insertion_rules) = input;
-    let mut mapping: Mapping = initialize_mapping(input);
+    let (template, insertion_rules) = input;
+    let mut mapping: Mapping = initialize_mapping(&template, &insertion_rules);
 
     for _ in 0..10 {
         replace(&mut mapping, &insertion_rules);
@@ -55,8 +51,8 @@ fn part1(input: &(Template, InsertionRules)) -> usize {
 
 #[aoc(day14, part2)]
 fn part2(input: &(Template, InsertionRules)) -> usize {
-    let (_template, insertion_rules) = input;
-    let mut mapping: Mapping = initialize_mapping(input);
+    let (template, insertion_rules) = input;
+    let mut mapping: Mapping = initialize_mapping(&template, &insertion_rules);
 
     for _ in 0..40 {
         replace(&mut mapping, &insertion_rules);
@@ -65,9 +61,7 @@ fn part2(input: &(Template, InsertionRules)) -> usize {
     range(count_occurrences(&mapping))
 }
 
-fn initialize_mapping(input: &(Template, InsertionRules)) -> Mapping {
-    let (template, insertion_rules) = input;
-
+fn initialize_mapping(template: &Template, insertion_rules: &InsertionRules) -> Mapping {
     // chars appearing in rhs of rules
     let mut rule_chars: Vec<char> = insertion_rules
         .iter()
@@ -102,9 +96,9 @@ fn initialize_mapping(input: &(Template, InsertionRules)) -> Mapping {
 fn replace(mapping: &mut Mapping, insertion_rules: &InsertionRules) {
     let mut operations: Vec<(Template, isize)> = Vec::new();
 
-    for (pair, count) in mapping.iter() {
+    for (pair, count) in mapping.iter().filter(|(_, &count)| count > 0) {
         for (pattern, interstitial) in insertion_rules {
-            if pair == pattern && *count > 0 {
+            if pair == pattern {
                 // after replacement, the pair will be replaced with two patterns
                 let before = vec![pair[0], *interstitial];
                 let after = vec![*interstitial, pair[1]];
@@ -130,6 +124,7 @@ fn count_occurrences(mapping: &Mapping) -> HashMap<char, usize> {
     let mut occurrences: HashMap<char, usize> = HashMap::new();
 
     for (pair, count) in mapping.iter() {
+        // why does this work? 🤷🏻‍♂️
         let entry = occurrences.entry(pair[1]).or_insert(0);
         *entry += count;
     }
