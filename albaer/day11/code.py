@@ -146,11 +146,19 @@ def count_flashes(lst, step_count, flash_count=0):
         new_flash_count = flash_count + count_zeroes(new_lst)
         return count_flashes(new_lst, step_count - 1, new_flash_count)
 
+# Part 2
+def find_simultaneous_flashes(lst, step_count=0):
+    if count_zeroes(lst) == len(lst) * len(lst[0]):
+        return step_count
+    else:
+        new_lst = step(lst)
+        return find_simultaneous_flashes(new_lst, step_count + 1)
+
 # Write solution
 
 if __name__ == '__main__':
     inputs = read_input_lines()
     part_1_result = count_flashes(inputs, 100)
-    part_2_result = "TODO"
+    part_2_result = find_simultaneous_flashes(inputs)
     solution = str(part_1_result) + "\n" + str(part_2_result)
     write_solution(solution)

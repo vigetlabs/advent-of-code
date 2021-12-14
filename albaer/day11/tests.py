@@ -252,6 +252,11 @@ class TestDay11(unittest.TestCase):
         expected = 1656
         self.assertEqual(actual, expected)
 
+    def test_find_simultaneous_flashes(self):
+        actual = find_simultaneous_flashes(self.EXAMPLE_INPUT)
+        expected = 195
+        self.assertEqual(actual, expected)
+
 
 
 if __name__ == '__main__':
