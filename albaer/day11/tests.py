@@ -207,78 +207,45 @@ class TestDay11(unittest.TestCase):
             "34543",
         ]
         self.assertEqual(actual, expected)
-        # actual_2 = step(expected)
-        # expected_2 = [
-        #     "45654",
-        #     "51115",
-        #     "61116",
-        #     "51115",
-        #     "45654",
-        # ]
-        # self.assertEqual(actual_2, expected_2)
+        actual_2 = step(expected)
+        expected_2 = [
+            "45654",
+            "51115",
+            "61116",
+            "51115",
+            "45654",
+        ]
+        self.assertEqual(actual_2, expected_2)
 
-    # def test_step_1(self):
-    #     actual = step(self.EXAMPLE_INPUT)
-    #     expected = [
-    #         "6594254334",
-    #         "3856965822",
-    #         "6375667284",
-    #         "7252447257",
-    #         "7468496589",
-    #         "5278635756",
-    #         "3287952832",
-    #         "7993992245",
-    #         "5957959665",
-    #         "6394862637",
-    #     ]
-    #     self.assertEqual(actual, expected)
-
-    # def test_flash(self):
-    #     start = [
-    #         "12345",
-    #         "67890",
-    #         "12345",
-    #         "67890",
-    #         "12345",
-    #     ]
-    #     int_grid = string_grid_to_int_grid(start)
-    #     print(printable_grid(int_grid))
-    #     int_grid = add_one_to_grid(int_grid)
-    #     print(printable_grid(int_grid))
-    #     # actual = flash(int_grid)
-    #     # print(printable_grid(int_grid))
-    #     expected = []
-    #     self.assertEqual([], expected)
-
-
-    # def test_step_2(self):
-    #     start = [
-    #         "6594254334",
-    #         "3856965822",
-    #         "6375667284",
-    #         "7252447257",
-    #         "7468496589",
-    #         "5278635756",
-    #         "3287952832",
-    #         "7993992245",
-    #         "5957959665",
-    #         "6394862637",
-    #     ]
-    #     int_grid = string_grid_to_int_grid(start)
-    #     actual = step(int_grid)
-    #     expected = [
-    #         "8807476555",
-    #         "5089087054",
-    #         "8597889608",
-    #         "8485769600",
-    #         "8700908800",
-    #         "6600088989",
-    #         "6800005943",
-    #         "0000007456",
-    #         "9000000876",
-    #         "8700006848",
-    #     ]
-    #     self.assertEqual(actual, expected)
+    def test_step_big(self):
+        actual = step(self.EXAMPLE_INPUT)
+        expected = [
+            "6594254334",
+            "3856965822",
+            "6375667284",
+            "7252447257",
+            "7468496589",
+            "5278635756",
+            "3287952832",
+            "7993992245",
+            "5957959665",
+            "6394862637",
+        ]
+        self.assertEqual(actual, expected)
+        actual_2 = step(expected)
+        expected_2 = [
+            "8807476555",
+            "5089087054",
+            "8597889608",
+            "8485769600",
+            "8700908800",
+            "6600088989",
+            "6800005943",
+            "0000007456",
+            "9000000876",
+            "8700006848",
+        ]
+        self.assertEqual(actual_2, expected_2)
 
 if __name__ == '__main__':
     unittest.main()

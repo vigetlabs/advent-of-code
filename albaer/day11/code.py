@@ -96,16 +96,22 @@ def is_adjacent(lst, index_a, index_b):
     bx, by = get_coords(lst, index_b)
     return (abs(ax - bx) <= 1) and (abs(ay - by) <= 1)
 
-def adjacents(lst, index):
+def adjacent_indexes(lst, index):
     return [i for i in all_indices(lst) if is_adjacent(lst, i, index)]
+
+def adjacent_increases(lst, int_lst, index):
+    indexes = adjacent_indexes(lst, index)
+    return [i for i in indexes if int_lst[i] != 10 or i == index]
+
 
 def add_one_to_all(int_lst):
     return [i + 1 for i in int_lst]
 
 def flash_one(lst, int_lst, index):
     width, _ = get_dimensions(lst)
-    adjacent_indexes = adjacents(lst, index)
-    new_int_lst = [i + 1 if (index in adjacent_indexes) else i for i, index in enumerate(int_lst)]
+    increases = adjacent_increases(lst, int_lst, index)
+    new_int_lst = [val + 1 if (idx in increases) else val for idx, val in enumerate(int_lst)]
+    print_lst(lst, int_lst)
     return new_int_lst
 
 def flash_grid(lst, int_lst):
@@ -123,17 +129,9 @@ def reset_grid(int_lst):
 def step(lst):
     width, _ = get_dimensions(lst)
     int_lst = get_int_lst(lst)
-    pprint("start")
-    print_lst(lst, int_lst)
     int_lst = add_one_to_all(int_lst)
-    pprint("add one to all")
-    print_lst(lst, int_lst)
     int_lst = flash_grid(lst, int_lst)
-    pprint("flash grid")
-    print_lst(lst, int_lst)
     int_lst = reset_grid(int_lst)
-    pprint("reset_grid")
-    print_lst(lst, int_lst)
     lst = get_string_lst(int_lst, width)
     return lst
 
