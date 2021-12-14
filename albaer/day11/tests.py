@@ -83,8 +83,6 @@ class TestDay11(unittest.TestCase):
         expected = 195
         self.assertEqual(actual, expected)
 
-
-
 if __name__ == '__main__':
     unittest.main()
 

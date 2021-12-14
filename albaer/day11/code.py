@@ -119,7 +119,8 @@ def count_flashes(lst, step_count, flash_count=0):
 
 # Part 2
 def find_simultaneous_flashes(lst, step_count=0):
-    if count_zeroes(lst) == len(lst) * len(lst[0]):
+    width, height = get_dimensions(lst)
+    if count_zeroes(lst) == width * height:
         return step_count
     else:
         new_lst = step(lst)
