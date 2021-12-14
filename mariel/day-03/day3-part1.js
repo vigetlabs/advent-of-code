@@ -27,8 +27,7 @@ const day03part1 = () => {
     }
 
     let value = Math.max(...Object.values(object));
-    console.log(Object.values(object));
-    gammaValue.push(value.find((key) => object[key] === value));
+    gammaValue.push(Object.keys(object).find((key) => object[key] === value));
   };
 
   arrays.forEach((element) => findMostCommonElement(element));
