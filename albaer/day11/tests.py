@@ -247,6 +247,13 @@ class TestDay11(unittest.TestCase):
         ]
         self.assertEqual(actual_2, expected_2)
 
+    def test_count_flashes(self):
+        actual = count_flashes(self.EXAMPLE_INPUT, 100)
+        expected = 1656
+        self.assertEqual(actual, expected)
+
+
+
 if __name__ == '__main__':
     unittest.main()
 

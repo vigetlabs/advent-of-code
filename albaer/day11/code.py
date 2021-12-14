@@ -111,7 +111,6 @@ def flash_one(lst, int_lst, index):
     width, _ = get_dimensions(lst)
     increases = adjacent_increases(lst, int_lst, index)
     new_int_lst = [val + 1 if (idx in increases) else val for idx, val in enumerate(int_lst)]
-    print_lst(lst, int_lst)
     return new_int_lst
 
 def flash_grid(lst, int_lst):
@@ -135,13 +134,17 @@ def step(lst):
     lst = get_string_lst(int_lst, width)
     return lst
 
-def count_flashes_for_steps(lst, step_count, flash_count):
+def count_zeroes(lst):
+    int_lst = get_int_lst(lst)
+    return int_lst.count(0)
+
+def count_flashes(lst, step_count, flash_count=0):
     if step_count == 0:
         return flash_count
     else:
-        new_grid = step(lst)
-        new_flash_count = flash_count + new_grid.count(0)
-        return steps(new_grid, step_count - 1, new_flash_count)
+        new_lst = step(lst)
+        new_flash_count = flash_count + count_zeroes(new_lst)
+        return count_flashes(new_lst, step_count - 1, new_flash_count)
 
 
 
