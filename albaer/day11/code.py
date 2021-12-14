@@ -16,13 +16,15 @@ def split_inputs_from_first_line():
     first_line_as_str = input_lines[0]
     return first_line_as_str.split(",")
 
-# Part 1
+# Utilities
 
 def flatten(lst):
     return [item for sublist in lst for item in sublist]
 
 def slices(lst, n):
     return[lst[i:i + n] for i in range(0, len(lst), n)]
+
+# Conversions from input list to list of integers and back
 
 def get_int_lst(lst):
     string_chars = flatten([list(row) for row in lst])
@@ -34,24 +36,28 @@ def get_string_lst(int_lst):
     string_sublists = slices(string_flat_list, width)
     return ["".join(i) for i in string_sublists]
 
-# def printable_char(char):
-#     match char:
-#         case 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9:
-#             return str(char)
-#         case 10:
-#             return "x"
-#         case _:
-#             return "-"
+# Convenience methods for printing the integer list out
 
-# def printable_lst(int_lst):
-#     width = int(sqrt(len(int_lst)))
-#     char_list = [printable_char(i) for i in int_lst]
-#     char_sublists = slices(char_list, width)
-#     char_strings = ["".join(i) for i in char_sublists]
-#     return "\n".join(char_strings) + "\n"
+def printable_char(char):
+    match char:
+        case 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9:
+            return str(char)
+        case 10:
+            return "x"
+        case _:
+            return "-"
 
-# def print_lst(int_lst):
-#     print(printable_lst(int_lst))
+def printable_lst(int_lst):
+    width = int(sqrt(len(int_lst)))
+    char_list = [printable_char(i) for i in int_lst]
+    char_sublists = slices(char_list, width)
+    char_strings = ["".join(i) for i in char_sublists]
+    return "\n".join(char_strings) + "\n"
+
+def print_int_lst(int_lst):
+    print(printable_lst(int_lst))
+
+# Part 1
 
 def get_coords(int_lst, index):
     width = int(sqrt(len(int_lst)))
@@ -89,6 +95,8 @@ def flash_grid(int_lst):
 
 def reset_grid(int_lst):
     return [0 if i > 9 else i for i in int_lst]
+
+# Leaving conversions here for simplicity with testing
 
 def step(lst):
     int_lst = get_int_lst(lst)
