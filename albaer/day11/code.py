@@ -1,4 +1,5 @@
 from pprint import pprint
+from math import sqrt
 
 def write_solution(solution, output_file_path="solution.txt"):
     with open(output_file_path, "w") as output_file:
@@ -27,7 +28,8 @@ def get_int_lst(lst):
     string_chars = flatten([list(row) for row in lst])
     return [int(char) for char in string_chars]
 
-def get_string_lst(int_lst, width):
+def get_string_lst(int_lst):
+    width = int(sqrt(len(int_lst)))
     string_flat_list = [str(i) for i in int_lst]
     string_sublists = slices(string_flat_list, width)
     return ["".join(i) for i in string_sublists]
@@ -42,7 +44,7 @@ def printable_char(char):
             return "-"
 
 def printable_lst(lst, int_lst):
-    width, _ = get_dimensions(lst)
+    width = int(sqrt(len(int_lst)))
     char_list = [printable_char(i) for i in int_lst]
     char_sublists = slices(char_list, width)
     char_strings = ["".join(i) for i in char_sublists]
@@ -54,55 +56,49 @@ def print_lst(lst, int_lst):
 def get_dimensions(lst):
     return [len(lst[0]), len(lst)]
 
-def get_coords(lst, index):
-    width, _ = get_dimensions(lst)
+def get_coords(int_lst, index):
+    width = int(sqrt(len(int_lst)))
     return list(divmod(index, width))
 
-def all_indices(lst):
-    width, height = get_dimensions(lst)
-    return [i for i in range(width * height)]
-
-def is_adjacent(lst, index_a, index_b):
-    ax, ay = get_coords(lst, index_a)
-    bx, by = get_coords(lst, index_b)
+def is_adjacent(int_lst, index_a, index_b):
+    ax, ay = get_coords(int_lst, index_a)
+    bx, by = get_coords(int_lst, index_b)
     return (abs(ax - bx) <= 1) and (abs(ay - by) <= 1)
 
-def adjacent_indexes(lst, index):
-    return [i for i in all_indices(lst) if is_adjacent(lst, i, index)]
+def adjacent_indexes(int_lst, index):
+    return [i for i in range(len(int_lst)) if is_adjacent(int_lst, i, index)]
 
-def adjacent_increases(lst, int_lst, index):
-    indexes = adjacent_indexes(lst, index)
+def adjacent_increases(int_lst, index):
+    indexes = adjacent_indexes(int_lst, index)
     return [i for i in indexes if int_lst[i] != 10 or i == index]
-
 
 def add_one_to_all(int_lst):
     return [i + 1 for i in int_lst]
 
-def flash_one(lst, int_lst, index):
-    width, _ = get_dimensions(lst)
-    increases = adjacent_increases(lst, int_lst, index)
+def flash_one(int_lst, index):
+    width = int(sqrt(len(int_lst)))
+    increases = adjacent_increases(int_lst, index)
     new_int_lst = [val + 1 if (idx in increases) else val for idx, val in enumerate(int_lst)]
     return new_int_lst
 
-def flash_grid(lst, int_lst):
-    width, _ = get_dimensions(lst)
+def flash_grid(int_lst):
+    width = int(sqrt(len(int_lst)))
     if not 10 in int_lst:
         return int_lst
     else:
         next_flash_index = int_lst.index(10)
-        new_int_lst = flash_one(lst, int_lst, next_flash_index)
-        return flash_grid(lst, new_int_lst)
+        new_int_lst = flash_one(int_lst, next_flash_index)
+        return flash_grid(new_int_lst)
 
 def reset_grid(int_lst):
     return [0 if i > 9 else i for i in int_lst]
 
 def step(lst):
-    width, _ = get_dimensions(lst)
     int_lst = get_int_lst(lst)
     int_lst = add_one_to_all(int_lst)
-    int_lst = flash_grid(lst, int_lst)
+    int_lst = flash_grid(int_lst)
     int_lst = reset_grid(int_lst)
-    lst = get_string_lst(int_lst, width)
+    lst = get_string_lst(int_lst)
     return lst
 
 def count_zeroes(lst):
