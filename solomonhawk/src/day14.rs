@@ -1,5 +1,6 @@
 #![allow(unused)]
 
+use itertools::Itertools;
 use std::collections::HashMap;
 use std::error::Error;
 use std::fmt;
@@ -17,6 +18,7 @@ impl fmt::Display for ParseError {
 
 type Template = Vec<char>;
 type InsertionRules = Vec<(Vec<char>, char)>;
+type Mapping = HashMap<Template, usize>;
 
 #[aoc_generator(day14)]
 fn input_generator(input: &str) -> Result<(Template, InsertionRules), Box<dyn Error>> {
@@ -41,43 +43,95 @@ fn input_generator(input: &str) -> Result<(Template, InsertionRules), Box<dyn Er
 
 #[aoc(day14, part1)]
 fn part1(input: &(Template, InsertionRules)) -> usize {
-    let (template, insertion_rules) = input;
-    let mut template = template.clone();
+    let (_template, insertion_rules) = input;
+    let mut mapping: Mapping = initialize_mapping(input);
 
     for _ in 0..10 {
-        insert(&mut template, &insertion_rules);
+        replace(&mut mapping, &insertion_rules);
     }
 
-    range(count_occurrences(&template))
+    range(count_occurrences(&mapping))
 }
 
 #[aoc(day14, part2)]
 fn part2(input: &(Template, InsertionRules)) -> usize {
-    0
+    let (_template, insertion_rules) = input;
+    let mut mapping: Mapping = initialize_mapping(input);
+
+    for _ in 0..40 {
+        replace(&mut mapping, &insertion_rules);
+    }
+
+    range(count_occurrences(&mapping))
 }
 
-fn insert(template: &mut Template, insertion_rules: &InsertionRules) {
-    let mut operations = Vec::new();
+fn initialize_mapping(input: &(Template, InsertionRules)) -> Mapping {
+    let (template, insertion_rules) = input;
 
-    for (i, pair) in template.windows(2).enumerate() {
+    // chars appearing in rhs of rules
+    let mut rule_chars: Vec<char> = insertion_rules
+        .iter()
+        .map(|(_pattern, interstitial)| *interstitial)
+        .collect();
+
+    // all chars from template and rules (contains duplicates)
+    let mut all_chars = template.clone();
+    all_chars.append(&mut rule_chars);
+
+    // create a mapping of all unique pairs of chars to their associated counts
+    // { ['N', 'C']: 1, ['N', 'N']: 0, .. }
+    let mut mapping: Mapping = all_chars
+        .iter()
+        .unique()
+        .flat_map(|&c| vec![c, c])
+        .permutations(2)
+        .unique()
+        .map(|t| (t, 0))
+        .collect();
+
+    // populate the mapping with pair occurence counts of starting template
+    for pair in template.windows(2) {
+        if let Some(x) = mapping.get_mut(pair) {
+            *x += 1;
+        }
+    }
+
+    mapping
+}
+
+fn replace(mapping: &mut Mapping, insertion_rules: &InsertionRules) {
+    let mut operations: Vec<(Template, isize)> = Vec::new();
+
+    for (pair, count) in mapping.iter() {
         for (pattern, interstitial) in insertion_rules {
-            if pair == pattern {
-                operations.push((i + 1, interstitial)); // insert after `i`
+            if pair == pattern && *count > 0 {
+                // after replacement, the pair will be replaced with two patterns
+                let before = vec![pair[0], *interstitial];
+                let after = vec![*interstitial, pair[1]];
+
+                // decrement the pair (e.g. [N, N])
+                operations.push((pair.to_vec(), *count as isize * -1));
+                // increment the new starting pair (e.g. [N, C])
+                operations.push((before, *count as isize));
+                // increment the new ending pair (e.g. [C, N])
+                operations.push((after, *count as isize));
             }
         }
     }
 
-    for (replacement, (position, interstitial)) in operations.iter().enumerate() {
-        template.insert(position + replacement, **interstitial)
+    for (pair, adjustment) in operations.iter() {
+        if let Some(x) = mapping.get_mut(pair) {
+            *x = (*x as isize + adjustment) as usize;
+        }
     }
 }
 
-fn count_occurrences(template: &Template) -> HashMap<char, usize> {
+fn count_occurrences(mapping: &Mapping) -> HashMap<char, usize> {
     let mut occurrences: HashMap<char, usize> = HashMap::new();
 
-    for c in template.iter() {
-        let entry = occurrences.entry(*c).or_insert(0);
-        *entry += 1;
+    for (pair, count) in mapping.iter() {
+        let entry = occurrences.entry(pair[1]).or_insert(0);
+        *entry += count;
     }
 
     occurrences
