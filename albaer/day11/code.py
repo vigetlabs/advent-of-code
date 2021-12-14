@@ -34,27 +34,24 @@ def get_string_lst(int_lst):
     string_sublists = slices(string_flat_list, width)
     return ["".join(i) for i in string_sublists]
 
-def printable_char(char):
-    match char:
-        case 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9:
-            return str(char)
-        case 10:
-            return "x"
-        case _:
-            return "-"
+# def printable_char(char):
+#     match char:
+#         case 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9:
+#             return str(char)
+#         case 10:
+#             return "x"
+#         case _:
+#             return "-"
 
-def printable_lst(lst, int_lst):
-    width = int(sqrt(len(int_lst)))
-    char_list = [printable_char(i) for i in int_lst]
-    char_sublists = slices(char_list, width)
-    char_strings = ["".join(i) for i in char_sublists]
-    return "\n".join(char_strings) + "\n"
+# def printable_lst(int_lst):
+#     width = int(sqrt(len(int_lst)))
+#     char_list = [printable_char(i) for i in int_lst]
+#     char_sublists = slices(char_list, width)
+#     char_strings = ["".join(i) for i in char_sublists]
+#     return "\n".join(char_strings) + "\n"
 
-def print_lst(lst, int_lst):
-    print(printable_lst(lst, int_lst))
-
-def get_dimensions(lst):
-    return [len(lst[0]), len(lst)]
+# def print_lst(int_lst):
+#     print(printable_lst(int_lst))
 
 def get_coords(int_lst, index):
     width = int(sqrt(len(int_lst)))
@@ -115,8 +112,7 @@ def count_flashes(lst, step_count, flash_count=0):
 
 # Part 2
 def find_simultaneous_flashes(lst, step_count=0):
-    width, height = get_dimensions(lst)
-    if count_zeroes(lst) == width * height:
+    if count_zeroes(lst) == len(lst) * len(lst[0]):
         return step_count
     else:
         new_lst = step(lst)
