@@ -17,35 +17,6 @@ def split_inputs_from_first_line():
 
 # Part 1
 
-# +1 to all
-# all >9s flash
-# Octopuses adjacent to flashes +1
-# All >9s flash
-# Octopuses adjacent to flashes +1
-# ...
-# Reset all >9s to 0
-
-# 5x5 Indices     Coordinates
-# 00,01,02,03,04  00,01,02,03,04
-# 05,06,07,08,09  10,11,12,13,14
-# 10,11,12,13,14  20,21,22,23,24
-# 15,16,17,18,19  30,31,32,33,34
-# 20,21,22,23,24  40,41,42,43,44
-
-# 3x4 Indices  Coordinates
-# 00,01,02,03  00,01,02,03
-# 04,05,06,07  10,11,12,13
-# 08,09,10,11  20,21,22,23
-
-# 10x10 Indices/Coordinates
-# 00,01,02,03,04,05,06,07,08,09
-# 10,11,12,13,14,15,16,17,18,19
-# 20,21,22,23,24,25,26,27,28,29
-# 30,31,32,33,34,35,36,37,38,39
-# ...
-# 80,81,82,83,84,85,86,87,88,89
-# 90,91,92,93,94,95,96,97,98,99
-
 def flatten(lst):
     return [item for sublist in lst for item in sublist]
 
