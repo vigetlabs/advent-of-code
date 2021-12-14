@@ -4,10 +4,14 @@ import (
   "fmt"
   "os"
   "strings"
+  "math"
 )
 
 
+// const debug = true
 // const filename = "example.txt"
+
+const debug = false
 const filename = "input.txt"
 
 func main() {
@@ -23,14 +27,51 @@ func main() {
     rules[ruleStr[0]] = ruleStr[1]
   }
 
-  for step := 0; step < 10; step++ {
-    polymer = iterate(polymer, rules)
-  }
-
-  solvePartOne(polymer)
+  solvePartOne(polymer, rules)
+  solvePartTwo(polymer, rules)
 }
 
-func iterate(polymer string, rules map[string]string) string {
+func solvePartOne(polymer string, rules map[string]string) {
+  for step := 0; step < 10; step++ {
+    polymer = iteratePolymer(polymer, rules)
+  }
+
+  countPartOne(polymer)
+}
+
+func solvePartTwo(polymer string, rules map[string]string) {
+  pairCounts := assemblePairCount(polymer)
+
+  for step := 0; step < 40; step++ {
+    pairCounts = iteratePairs(pairCounts, rules)
+  }
+
+  countPartTwo(pairCounts, polymer)
+}
+
+func countPartOne(polymer string) {
+  counts := make(map[string]int)
+
+  for _, char := range strings.Split(polymer, "") {
+    addTo(&counts, char, 1)
+  }
+
+  if (debug) {
+    fmt.Println("counts", counts)
+  }
+
+  maxCount := 0
+  minCount := math.MaxInt64
+
+  for _, count := range counts {
+    if (count > maxCount) { maxCount = count }
+    if (count < minCount) { minCount = count }
+  }
+
+  fmt.Println("Part 1:", maxCount - minCount)
+}
+
+func iteratePolymer(polymer string, rules map[string]string) string {
   polymerSlice := strings.Split(polymer, "")
   nextSlice := make([]string, 0)
 
@@ -48,32 +89,82 @@ func iterate(polymer string, rules map[string]string) string {
   return strings.Join(nextSlice, "")
 }
 
-func solvePartOne(polymer string) {
-  polymerSlice := strings.Split(polymer, "")
-  counts := make(map[string]int)
+func iteratePairs(pairCounts map[string]int, rules map[string]string) map[string]int {
+  newPairCount := make(map[string]int)
 
-  for _, char := range polymerSlice {
-    _, exists := counts[char]
+  for pair, count := range pairCounts {
+    insert, exists := rules[pair]
     if exists {
-      counts[char] += 1
+      new1 := pair[:1] + insert
+      new2 := insert + pair[1:]
+      addTo(&newPairCount, new1, count)
+      addTo(&newPairCount, new2, count)
     } else {
-      counts[char] = 1
+      fmt.Println("does this ever happen?", pair)
     }
   }
 
-  // fmt.Println("counts", counts)
+  return newPairCount
+}
+
+func assemblePairCount(polymer string) map[string]int {
+  pairCounts := make(map[string]int)
+
+  for i := 0; i < len(polymer) - 1; i++ {
+    pair := polymer[i:i+2]
+    addTo(&pairCounts, pair, 1)
+  }
+
+  return pairCounts
+}
+
+func countPartTwo(pairCounts map[string]int, polymer string) {
+  characterCounts := make(map[string]int)
+
+  for pair, count := range pairCounts {
+    for _, char := range strings.Split(pair, "") {
+      addTo(&characterCounts, char, count)
+    }
+  }
+
+
+  first := polymer[:1]
+  last := polymer[len(polymer)-1:]
 
   maxCount := 0
-  minCount := 1000000
-  for _, count := range counts {
-    if count > maxCount {
-      maxCount = count
-    } else if count < minCount {
-      minCount = count
+  minCount := math.MaxInt64
+
+  for char, count := range characterCounts {
+    // Characters in the middle were counted twice since the pairs overlap
+    // Characters on the end need a bit of math to offset the fact that _one_ of
+    //   them was just counted once, while all the others were counted twice
+    var actualCount int
+    if (char == first || char == last) {
+      actualCount = ((count - 1) / 2) + 1
+    } else {
+      actualCount = count / 2
     }
+
+    if (actualCount > maxCount) { maxCount = actualCount }
+    if (actualCount < minCount) { minCount = actualCount }
   }
 
-  fmt.Println("Part 1:", maxCount - minCount)
+  if (debug) {
+    fmt.Println("characterCounts:", characterCounts)
+    fmt.Println("maxCount:", maxCount)
+    fmt.Println("minCount:", minCount)
+  }
 
-  // 3515 too low :(
+  fmt.Println("Part 2:", maxCount - minCount)
+}
+
+func addTo(countsPtr *map[string]int, key string, count int) {
+  counts := *countsPtr
+
+  _, exists := counts[key]
+  if exists {
+    counts[key] += count
+  } else {
+    counts[key] = count
+  }
 }
