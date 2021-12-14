@@ -47,18 +47,18 @@ func main() {
     printDots(dots)
   }
 
+  for _, instruction := range instructions {
+    split := strings.Split(instruction, "=")
+    lineNumber, _ := strconv.Atoi(split[1])
 
-  // foldY(&dots, 7)
-  //
-  // if debug {
-  //   printDots(dots)
-  // }
-
-  foldX(&dots, 655)
-
-  if debug {
-    printDots(dots)
+    if strings.Contains(instruction, "x=") {
+      foldX(&dots, lineNumber)
+    } else {
+      foldY(&dots, lineNumber)
+    }
   }
+
+  printDots(dots)
 
   dotCount := countDots(dots)
   fmt.Println("dotCount:", dotCount)
@@ -69,7 +69,6 @@ func main() {
 
 func countDots(dots Dots) int {
   maxX, maxY := dimensionsOf(dots)
-  fmt.Println("maxX, maxY: ", maxX, maxY)
 
   count := 0
   for x := 0; x < maxX; x++ {
