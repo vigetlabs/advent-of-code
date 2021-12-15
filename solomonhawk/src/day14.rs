@@ -1,5 +1,3 @@
-#![allow(unused)]
-
 use itertools::Itertools;
 use std::collections::HashMap;
 use std::error::Error;
@@ -124,10 +122,7 @@ fn count_occurrences(mapping: &Mapping) -> HashMap<char, usize> {
 }
 
 fn range(occurrences: HashMap<char, usize>) -> usize {
-    let mut counts = occurrences
-        .iter()
-        .map(|(_c, count)| *count)
-        .collect::<Vec<usize>>();
+    let mut counts: Vec<usize> = occurrences.iter().map(|(_c, count)| *count).collect();
 
     counts.sort();
 
