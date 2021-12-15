@@ -4,6 +4,9 @@ version = "0.1.0"
 edition = "2021"
 authors = ["Solomon Hawk <solomon.hawk@viget.com>"]
 
+[workspace]
+members = ["src/*", "target/aoc/aoc-autobuild"]
+
 [lib]
 bench = false
 

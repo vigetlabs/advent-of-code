@@ -3,6 +3,14 @@
 version = 3
 
 [[package]]
+name = "aoc-autobuild"
+version = "0.3.0"
+dependencies = [
+ "aoc-runner",
+ "solomonhawk",
+]
+
+[[package]]
 name = "aoc-runner"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
