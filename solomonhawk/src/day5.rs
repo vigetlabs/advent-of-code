@@ -21,6 +21,7 @@ impl fmt::Display for LineParseError {
 
 impl FromStr for Line {
     type Err = Box<dyn Error>;
+
     fn from_str(string: &str) -> Result<Line, Self::Err> {
         let (start, end) = string.split_once(" -> ").ok_or(LineParseError)?;
         let (x1, y1) = start.split_once(",").ok_or(LineParseError)?;
@@ -50,7 +51,7 @@ fn point_range_diag(line: &Line) -> Box<dyn Iterator<Item = (u32, u32)>> {
         return Box::new(h.zip(v.rev()));
     }
 
-    // ys are reversed, so we need to reverse ss
+    // ys are reversed, so we need to reverse xs
     if y1 > y2 && x1 < x2 {
         return Box::new(h.rev().zip(v));
     }

@@ -106,29 +106,17 @@ impl FromStr for Board {
     }
 }
 
-// ugly
 impl fmt::Display for Board {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let mut space_iter = self.spaces.iter();
+        let rows = self.spaces.chunks(5);
         let mut display_str = String::from("");
 
-        for _ in 0..5 {
-            let (s1, s2, s3, s4, s5) = (
-                space_iter.next().unwrap(),
-                space_iter.next().unwrap(),
-                space_iter.next().unwrap(),
-                space_iter.next().unwrap(),
-                space_iter.next().unwrap(),
-            );
+        for row in rows {
+            for space in row.iter() {
+                display_str.push_str(&format!("{} ", if space.picked { "x" } else { "·" }));
+            }
 
-            display_str.push_str(&format!(
-                "{} {} {} {} {}\n",
-                if s1.picked { "x" } else { "·" },
-                if s2.picked { "x" } else { "·" },
-                if s3.picked { "x" } else { "·" },
-                if s4.picked { "x" } else { "·" },
-                if s5.picked { "x" } else { "·" }
-            ));
+            display_str.push_str(&"\n");
         }
 
         write!(f, "{}", display_str)
@@ -136,23 +124,19 @@ impl fmt::Display for Board {
 }
 
 fn check_row_win(board: &Board, index: usize) -> bool {
-    for space in board.spaces.iter().filter(|s| s.row == index) {
-        if !space.picked {
-            return false;
-        }
-    }
-
-    true
+    board
+        .spaces
+        .iter()
+        .filter(|s| s.row == index)
+        .all(|s| s.picked)
 }
 
 fn check_col_win(board: &Board, index: usize) -> bool {
-    for space in board.spaces.iter().filter(|s| s.col == index) {
-        if !space.picked {
-            return false;
-        }
-    }
-
-    true
+    board
+        .spaces
+        .iter()
+        .filter(|s| s.col == index)
+        .all(|s| s.picked)
 }
 
 #[aoc_generator(day4)]
@@ -186,6 +170,7 @@ pub fn part1(bingo: &Bingo) -> usize {
     bingo.play();
 
     if let Some(winner) = &bingo.winners.first() {
+        println!("{}", winner);
         sum_unmarked_spaces(winner) * winner.last_pick.expect("Winning board missing last_pick")
     } else {
         println!("A winner was not found!");
@@ -200,6 +185,7 @@ pub fn part2(bingo: &Bingo) -> usize {
     bingo.play();
 
     if let Some(winner) = &bingo.winners.last() {
+        println!("{}", winner);
         sum_unmarked_spaces(winner) * winner.last_pick.expect("Winning board missing last_pick")
     } else {
         println!("A winner was not found!");
@@ -215,7 +201,6 @@ fn sum_unmarked_spaces(board: &Board) -> usize {
         .sum()
 }
 
-// TODO(shawk): I should write some tests...
 #[cfg(test)]
 mod tests {
     use super::*;
