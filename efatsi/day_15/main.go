@@ -7,13 +7,17 @@ import (
   "strconv"
 )
 
-const debug = false
-const filename = "example.txt"
-const DIMENSION = 10
+// const debug = true
+// const filename = "example.txt"
+// const DIMENSION = 10
 
 // const debug = false
-// const filename = "input.txt"
-// const DIMENSION = 100
+// const filename = "example_md.txt"
+// const DIMENSION = 50
+
+const debug = false
+const filename = "input.txt"
+const DIMENSION = 100
 
 const BIG_DIMENSION = DIMENSION * 5
 
@@ -35,7 +39,7 @@ func main() {
   riskLines := strings.Split(trimmedData, "\n")
   riskmap := loadRiskmap(riskLines)
 
-  // solvePartOne(riskLines)
+  // solvePartOne(riskmap)
   solvePartTwo(riskmap)
 }
 
@@ -59,7 +63,7 @@ func solvePartOne(riskmap Riskmap) {
       fmt.Println("focus     :", focus)
     }
 
-    for _, validCoordinates := range focus.neighbors(riskmap) {
+    for _, validCoordinates := range focus.neighbors(DIMENSION) {
       neighbor := &riskmap[validCoordinates[0]][validCoordinates[1]]
 
       if (focus.lowestRisk + neighbor.risk < neighbor.lowestRisk) {
@@ -81,35 +85,56 @@ func solvePartOne(riskmap Riskmap) {
 }
 
 func solvePartTwo(riskmap Riskmap) {
-  var bigRiskmap BigRiskmap
+  bigRiskmap := loadBigRiskmap(riskmap)
+  bigRiskmap[0][0].lowestRisk = 0
 
-  for bigX := 0; bigX < 5; bigX++ {
-    for bigY := 0; bigY < 5; bigY++ {
-      multiplier := bigX + bigY
-
-      for y := 0; y < DIMENSION; y++ {
-        for x := 0; x < DIMENSION; x++ {
-          if (debug && bigX == 4 && bigY == 0 && y == 0) {
-            fmt.Println(" x,y:", x, y)
-            fmt.Println("Bx,y:", x + (bigX * DIMENSION), y + (bigY * DIMENSION))
-            fmt.Println("old_risk:", riskmap[x][y].risk)
-            fmt.Println("new_risk:", modulo(riskmap[x][y].risk + multiplier))
-
-            fmt.Println("")
-          }
-
-          bigRiskmap[x + (bigX * DIMENSION)][y + (bigY * DIMENSION)] = Position {
-            x: x + bigX,
-            y: y + bigY,
-            risk: modulo(riskmap[x][y].risk + multiplier),
-            lowestRisk: BIG_DIMENSION * 2 * 10, // over max possible
-          }
-        }
-      }
-    }
+  if (debug) {
+    printBigRiskmap(bigRiskmap)
   }
 
-  printBigRiskmap(bigRiskmap)
+  var focus Position
+  unexplored := make([]Position, 1)
+  unexplored[0] = bigRiskmap[0][0]
+
+  for (len(unexplored) > 0) {
+    focus = unexplored[0]
+    unexplored = unexplored[1:]
+
+    if debug {
+      if focus.x == 9 && focus.y == 1 {
+        fmt.Println("Iterating")
+        fmt.Println("focus     :", focus)
+
+        fmt.Println("neighbors :", focus.neighbors(BIG_DIMENSION))
+      }
+    }
+
+    for _, validCoordinates := range focus.neighbors(BIG_DIMENSION) {
+      neighbor := &bigRiskmap[validCoordinates[0]][validCoordinates[1]]
+
+      if debug {
+        if focus.x == 9 && focus.y == 1 {
+          fmt.Println("neighbor:", neighbor)
+        }
+      }
+
+      if (focus.lowestRisk + neighbor.risk < neighbor.lowestRisk) {
+        neighbor.from = &focus
+        neighbor.lowestRisk = focus.lowestRisk + neighbor.risk
+
+        unexplored = append(unexplored, *neighbor)
+      }
+    }
+
+    if debug {
+      fmt.Println("unexplored:", unexplored)
+      printBigRiskmap(bigRiskmap)
+    }
+
+  }
+
+  fmt.Println("Bottom right:", bigRiskmap[BIG_DIMENSION-1][BIG_DIMENSION-1])
+  // printBigRiskmap(bigRiskmap)
 }
 
 func modulo(number int) int {
@@ -118,6 +143,29 @@ func modulo(number int) int {
   } else {
     return number
   }
+}
+
+func loadBigRiskmap(riskmap Riskmap) BigRiskmap {
+  var bigRiskmap BigRiskmap
+
+  for bigX := 0; bigX < 5; bigX++ {
+    for bigY := 0; bigY < 5; bigY++ {
+      multiplier := bigX + bigY
+
+      for y := 0; y < DIMENSION; y++ {
+        for x := 0; x < DIMENSION; x++ {
+          bigRiskmap[x + (bigX * DIMENSION)][y + (bigY * DIMENSION)] = Position {
+            x: x + (bigX * DIMENSION),
+            y: y + (bigY * DIMENSION),
+            risk: modulo(riskmap[x][y].risk + multiplier),
+            lowestRisk: BIG_DIMENSION * 2 * 10, // over max possible
+          }
+        }
+      }
+    }
+  }
+
+  return bigRiskmap
 }
 
 func loadRiskmap(riskLines []string) Riskmap {
@@ -156,7 +204,7 @@ func printBigRiskmap(riskmap BigRiskmap) {
   for y := 0; y < BIG_DIMENSION; y++ {
     for x := 0; x < BIG_DIMENSION; x++ {
       fmt.Print(riskmap[x][y].risk)
-      // fmt.Printf(" (%3d) ", riskmap[x][y].lowestRisk)
+      fmt.Printf(" (%3d) ", riskmap[x][y].lowestRisk)
     }
     fmt.Println("")
   }
@@ -164,7 +212,7 @@ func printBigRiskmap(riskmap BigRiskmap) {
   fmt.Println("")
 }
 
-func (position *Position) neighbors(riskmap Riskmap) [][2]int {
+func (position *Position) neighbors(dimension int) [][2]int {
   neighbors := make([][2]int, 0)
 
   x := position.x
@@ -176,7 +224,7 @@ func (position *Position) neighbors(riskmap Riskmap) [][2]int {
   }
 
   // Check Down
-  if y < DIMENSION - 1 {
+  if y < dimension - 1 {
     neighbors = append(neighbors, [2]int{x, y+1})
   }
 
@@ -186,7 +234,7 @@ func (position *Position) neighbors(riskmap Riskmap) [][2]int {
   }
 
   // Check Right
-  if x < DIMENSION - 1 {
+  if x < dimension - 1 {
     neighbors = append(neighbors, [2]int{x+1, y})
   }
 
