@@ -7,13 +7,13 @@ import (
   "strconv"
 )
 
-const debug = true
-const filename = "example.txt"
-const DIMENSION = 10
+// const debug = true
+// const filename = "example.txt"
+// const DIMENSION = 10
 
-// const debug = false
-// const filename = "input.txt"
-// const DIMENSION = 100
+const debug = false
+const filename = "input.txt"
+const DIMENSION = 100
 
 type Riskmap [DIMENSION][DIMENSION]Position
 
@@ -42,8 +42,7 @@ func main() {
   unexplored := make([]Position, 1)
   unexplored[0] = riskmap[0][0]
 
-  for i := 0; i < 5; i++ {
-  // for (len(unexplored) > 0) {
+  for (len(unexplored) > 0) {
     focus = unexplored[0]
     unexplored = unexplored[1:]
 
@@ -52,8 +51,8 @@ func main() {
       fmt.Println("focus     :", focus)
     }
 
-    for _, neighborReference := range focus.neighbors(riskmap) {
-      neighbor := &riskmap[neighborReference.x][neighborReference.y]
+    for _, validCoordinates := range focus.neighbors(riskmap) {
+      neighbor := &riskmap[validCoordinates[0]][validCoordinates[1]]
 
       if (focus.lowestRisk + neighbor.risk < neighbor.lowestRisk) {
         neighbor.from = &focus
@@ -71,9 +70,6 @@ func main() {
   }
 
   printRiskmap(riskmap)
-
-  // fmt.Println("bottom-right: ", riskmap[DIMENSION-1][DIMENSION-1])
-  // inspect map[9][9]
 }
 
 func loadRiskmap(riskLines []string) Riskmap {
@@ -108,30 +104,30 @@ func printRiskmap(riskmap Riskmap) {
   fmt.Println("")
 }
 
-func (position *Position) neighbors(riskmap Riskmap) []Position {
-  neighbors := make([]Position, 0)
+func (position *Position) neighbors(riskmap Riskmap) [][2]int {
+  neighbors := make([][2]int, 0)
 
   x := position.x
   y := position.y
 
   // Check Up
   if y > 0 {
-    neighbors = append(neighbors, riskmap[x][y-1])
+    neighbors = append(neighbors, [2]int{x, y-1})
   }
 
   // Check Down
   if y < DIMENSION - 1 {
-    neighbors = append(neighbors, riskmap[x][y+1])
+    neighbors = append(neighbors, [2]int{x, y+1})
   }
 
   // Check Left
   if x > 0 {
-    neighbors = append(neighbors, riskmap[x-1][y])
+    neighbors = append(neighbors, [2]int{x-1, y})
   }
 
   // Check Right
   if x < DIMENSION - 1 {
-    neighbors = append(neighbors, riskmap[x+1][y])
+    neighbors = append(neighbors, [2]int{x+1, y})
   }
 
   return neighbors
