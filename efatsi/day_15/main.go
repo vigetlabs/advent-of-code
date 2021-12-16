@@ -7,15 +7,18 @@ import (
   "strconv"
 )
 
-// const debug = true
-// const filename = "example.txt"
-// const DIMENSION = 10
-
 const debug = false
-const filename = "input.txt"
-const DIMENSION = 100
+const filename = "example.txt"
+const DIMENSION = 10
+
+// const debug = false
+// const filename = "input.txt"
+// const DIMENSION = 100
+
+const BIG_DIMENSION = DIMENSION * 5
 
 type Riskmap [DIMENSION][DIMENSION]Position
+type BigRiskmap [BIG_DIMENSION][BIG_DIMENSION]Position
 
 type Position struct {
   x int
@@ -30,8 +33,13 @@ func main() {
 
   trimmedData := strings.Trim(string(data), "\n ")
   riskLines := strings.Split(trimmedData, "\n")
-
   riskmap := loadRiskmap(riskLines)
+
+  // solvePartOne(riskLines)
+  solvePartTwo(riskmap)
+}
+
+func solvePartOne(riskmap Riskmap) {
   riskmap[0][0].lowestRisk = 0
 
   if debug {
@@ -72,6 +80,46 @@ func main() {
   printRiskmap(riskmap)
 }
 
+func solvePartTwo(riskmap Riskmap) {
+  var bigRiskmap BigRiskmap
+
+  for bigX := 0; bigX < 5; bigX++ {
+    for bigY := 0; bigY < 5; bigY++ {
+      multiplier := bigX + bigY
+
+      for y := 0; y < DIMENSION; y++ {
+        for x := 0; x < DIMENSION; x++ {
+          if (debug && bigX == 4 && bigY == 0 && y == 0) {
+            fmt.Println(" x,y:", x, y)
+            fmt.Println("Bx,y:", x + (bigX * DIMENSION), y + (bigY * DIMENSION))
+            fmt.Println("old_risk:", riskmap[x][y].risk)
+            fmt.Println("new_risk:", modulo(riskmap[x][y].risk + multiplier))
+
+            fmt.Println("")
+          }
+
+          bigRiskmap[x + (bigX * DIMENSION)][y + (bigY * DIMENSION)] = Position {
+            x: x + bigX,
+            y: y + bigY,
+            risk: modulo(riskmap[x][y].risk + multiplier),
+            lowestRisk: BIG_DIMENSION * 2 * 10, // over max possible
+          }
+        }
+      }
+    }
+  }
+
+  printBigRiskmap(bigRiskmap)
+}
+
+func modulo(number int) int {
+  if number > 9 {
+    return number - 9
+  } else {
+    return number
+  }
+}
+
 func loadRiskmap(riskLines []string) Riskmap {
   var riskmap Riskmap
 
@@ -97,6 +145,18 @@ func printRiskmap(riskmap Riskmap) {
     for x := 0; x < DIMENSION; x++ {
       fmt.Print(riskmap[x][y].risk)
       fmt.Printf(" (%3d) ", riskmap[x][y].lowestRisk)
+    }
+    fmt.Println("")
+  }
+
+  fmt.Println("")
+}
+
+func printBigRiskmap(riskmap BigRiskmap) {
+  for y := 0; y < BIG_DIMENSION; y++ {
+    for x := 0; x < BIG_DIMENSION; x++ {
+      fmt.Print(riskmap[x][y].risk)
+      // fmt.Printf(" (%3d) ", riskmap[x][y].lowestRisk)
     }
     fmt.Println("")
   }
