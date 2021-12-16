@@ -1,4 +1,3 @@
-#![allow(unused)]
 use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 
@@ -14,7 +13,6 @@ pub struct Edge {
 
 #[derive(Debug)]
 pub struct Node {
-    position: Point,
     edges: Vec<Edge>,
 }
 
@@ -69,13 +67,8 @@ fn generate_nodes(points: Vec<Vec<usize>>) -> Vec<Node> {
         .flat_map(|(y, row)| {
             let points = points.clone();
 
-            (0..row.len()).map(move |x| {
-                let position = (x as isize, y as isize);
-
-                Node {
-                    position,
-                    edges: find_edges(&points, position),
-                }
+            (0..row.len()).map(move |x| Node {
+                edges: find_edges(&points, (x as isize, y as isize)),
             })
         })
         .collect()
@@ -113,7 +106,7 @@ fn expand_points(points: &mut Vec<Vec<usize>>) {
 
 #[aoc(day15, part1)]
 pub fn part1(graph: &Vec<Node>) -> usize {
-    if let Some(distance) = shortest_path(&graph, 0, graph.len() - 1) {
+    if let Some(distance) = shortest_path(&graph) {
         distance
     } else {
         panic!("Could not find a shortest path")
@@ -122,7 +115,7 @@ pub fn part1(graph: &Vec<Node>) -> usize {
 
 #[aoc(day15, part2)]
 pub fn part2(graph: &Vec<Node>) -> usize {
-    if let Some(distance) = shortest_path(&graph, 0, graph.len() - 1) {
+    if let Some(distance) = shortest_path(&graph) {
         distance
     } else {
         panic!("Could not find a shortest path")
@@ -143,7 +136,9 @@ fn find_edges(points: &Vec<Vec<usize>>, origin: Point) -> Vec<Edge> {
 }
 
 // Djikstra's Algorithm https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm
-fn shortest_path(graph: &Vec<Node>, start: usize, end: usize) -> Option<usize> {
+fn shortest_path(graph: &Vec<Node>) -> Option<usize> {
+    let start = 0;
+    let end = graph.len() - 1;
     let mut dist: Vec<_> = (0..graph.len()).map(|_| usize::MAX).collect();
     let mut heap = BinaryHeap::new();
 
