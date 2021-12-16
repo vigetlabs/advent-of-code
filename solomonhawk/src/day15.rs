@@ -1,19 +1,15 @@
 use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 
-type Point = (isize, isize);
-
 const OFFSETS: [Point; 4] = [(-1, 0), (0, -1), (1, 0), (0, 1)];
+
+type Point = (isize, isize);
+type Node = Vec<Edge>;
 
 #[derive(Debug)]
 pub struct Edge {
     node: usize, // index in node list this edge points to
     cost: usize, // cost to move from the node that owns this edge to the node at `node`
-}
-
-#[derive(Debug)]
-pub struct Node {
-    edges: Vec<Edge>,
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
@@ -67,9 +63,7 @@ fn generate_nodes(points: Vec<Vec<usize>>) -> Vec<Node> {
         .flat_map(|(y, row)| {
             let points = points.clone();
 
-            (0..row.len()).map(move |x| Node {
-                edges: find_edges(&points, (x as isize, y as isize)),
-            })
+            (0..row.len()).map(move |x| find_edges(&points, (x as isize, y as isize)))
         })
         .collect()
 }
@@ -162,7 +156,7 @@ fn shortest_path(graph: &Vec<Node>) -> Option<usize> {
         }
 
         // for each node we can reach, check if that pathway is cheaper
-        for edge in &graph[position].edges {
+        for edge in &graph[position] {
             let next = State {
                 cost: cost + edge.cost,
                 position: edge.node,
