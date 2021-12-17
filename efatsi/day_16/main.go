@@ -9,11 +9,15 @@ import (
 
 const headerLength = 6
 
-const debug = true
-const filename = "example.txt"
+// const debug = true
+const debug = false
 
-// const debug = false
-// const filename = "input.txt"
+const readingHex = true
+// const readingHex = false
+
+// const filename = "example.txt"
+// const filename = "operator_binary.txt"
+const filename = "input.txt"
 
 type Packet struct {
   version int
@@ -27,30 +31,131 @@ type Packet struct {
 func main() {
   data, _ := os.ReadFile(filename)
   hexInput := strings.Trim(string(data), "\n ")
-  binary := hexToBin(hexInput)
+
+  var binary string
+  if readingHex {
+    binary = hexToBin(hexInput)
+  } else {
+    binary = string(hexInput)
+  }
+
+  if debug {
+    fmt.Println("Hex    input:", hexInput)
+    fmt.Println("Binary input:", binary)
+  }
 
   packet := readPacket(binary)
 
-  fmt.Println("packet: ", packet)
+  solvePartOne(packet)
+}
+
+func solvePartOne(packet Packet) {
+  sum := 0
+
+  countVersion(&sum, packet)
+
+  fmt.Println("packet sum: ", sum)
+}
+
+func countVersion(sum *int, packet Packet) {
+  *sum += packet.version
+
+  for _, packet := range packet.subPackets {
+    countVersion(sum, *packet)
+  }
 }
 
 func readPacket(binary string) Packet {
+  var packet Packet
   packetType := versionFrom(binToInt(binary[3:6]))
 
   if packetType == "literal" {
-    return readLiteralPacket(binary)
+    packet = readLiteralPacket(binary)
   } else {
-    return readOperatorPacket(binary)
+    packet = readOperatorPacket(binary)
   }
+
+  if debug {
+    fmt.Println("read packet:", packet)
+    fmt.Println("")
+  }
+
+  return packet
+}
+
+func readOperatorPacket(binary string) Packet {
+  if debug {
+    fmt.Println("Reading operator:", binary)
+  }
+
+  lengthType := binary[6:7]
+
+  operatorPacket := Packet {
+    version: binToInt(binary[0:3]),
+    packetType: "operator",
+  }
+
+  packetLength := 0
+  if lengthType == "0" {
+    // read next 15 bits [7:7+15]
+    // this is length of bits to read into until subpackets are done
+    bitCount := binToInt(binary[7:7+15])
+
+    if debug {
+      fmt.Println("")
+      fmt.Println("  Counting bits.")
+      fmt.Println("  bit count:", bitCount)
+      fmt.Println("  body:     ", binary[7+15:7+15+bitCount])
+      fmt.Println("")
+    }
+
+    readOffset := 0
+    for (readOffset < bitCount) {
+      newPacket := readPacket(binary[7+15+readOffset:7+15+bitCount])
+
+      operatorPacket.subPackets = append(operatorPacket.subPackets, &newPacket)
+      readOffset += newPacket.length
+    }
+
+    packetLength = 7+15+readOffset
+  } else {
+    // read next 11 bits [7:7+11]
+    // this is number of subpackets
+    packetCount := binToInt(binary[7:7+11])
+
+    if debug {
+      fmt.Println("")
+      fmt.Println("  Counting packets.")
+      fmt.Println("  packet count:", packetCount)
+      fmt.Println("  body:        ", binary[7+15:])
+      fmt.Println("")
+    }
+
+    readOffset := 0
+    for i := 0; i < packetCount; i++ {
+      newPacket := readPacket(binary[7+11+readOffset:])
+
+      operatorPacket.subPackets = append(operatorPacket.subPackets, &newPacket)
+      readOffset += newPacket.length
+    }
+
+    packetLength = 7+11+readOffset
+  }
+
+  operatorPacket.binary = binary[0:packetLength]
+  operatorPacket.length = packetLength
+
+  return operatorPacket
 }
 
 func readLiteralPacket(binary string) Packet {
+  if debug {
+    fmt.Println("Reading literal:", binary)
+    fmt.Println("")
+  }
+
   value, bodyLength := walkOverLiteral(binary)
   packetLength := headerLength + bodyLength
-
-  if debug {
-    fmt.Println("Reading literal binary:", binary)
-  }
 
   packet := Packet {
     version: binToInt(binary[0:3]),
@@ -61,44 +166,6 @@ func readLiteralPacket(binary string) Packet {
   }
 
   return packet
-}
-
-func readOperatorPacket(binary string) Packet {
-  if debug {
-    fmt.Println("Reading operator binary:", binary)
-  }
-
-  lengthType := binary[6:7]
-
-  operatorPacket := Packet {
-    version: binToInt(binary[0:3]),
-    packetType: "operator",
-    // binary: binary[0:length],
-    // length: length,
-  }
-
-  if lengthType == "0" {
-    // read next 15 bits [7:7+15]
-    // this is length of bits to read into until subpackets are done
-    bitCount := binary[7:7+15]
-    fmt.Println("bitCount", bitCount)
-    // while
-  } else {
-    // read next 11 bits [7:7+11]
-    // this is number of subpackets
-    packetCount := binToInt(binary[7:7+11])
-    readOffset := 0
-
-    for i := 0; i < packetCount; i++ {
-      newPacket := readPacket(binary[7+11+readOffset:])
-      fmt.Println("newPacket", newPacket)
-
-      operatorPacket.subPackets = append(operatorPacket.subPackets, &newPacket)
-      readOffset += newPacket.length
-    }
-  }
-
-  return operatorPacket
 }
 
 func walkOverLiteral(binary string) (value int, length int) {
@@ -117,10 +184,10 @@ func walkOverLiteral(binary string) (value int, length int) {
     valueString += nextBits[1:]
 
     if debug {
-      fmt.Println("")
       fmt.Println("step:       ", step)
       fmt.Println("nextBits:   ", nextBits)
       fmt.Println("valueString:", valueString)
+      fmt.Println("")
     }
 
     step++
@@ -129,11 +196,36 @@ func walkOverLiteral(binary string) (value int, length int) {
   return binToInt(valueString), step * 5
 }
 
-// Thanks internet: https://forum.golangbridge.org/t/hex-to-binary-function/4560/2
+
+
+// HELPERS
+var HEXMAP = map[string]string {
+  "0": "0000",
+  "1": "0001",
+  "2": "0010",
+  "3": "0011",
+  "4": "0100",
+  "5": "0101",
+  "6": "0110",
+  "7": "0111",
+  "8": "1000",
+  "9": "1001",
+  "A": "1010",
+  "B": "1011",
+  "C": "1100",
+  "D": "1101",
+  "E": "1110",
+  "F": "1111",
+}
+
 func hexToBin(hex string) string {
-  ui, _ := strconv.ParseUint(hex, 16, 64)
-  // %016b indicates base 2, zero padded, with 16 characters
-  return fmt.Sprintf("%016b", ui)
+  hexes := strings.Split(hex, "")
+  var binaryString string
+  for _, char := range hexes {
+    binaryString += HEXMAP[char]
+  }
+
+  return binaryString
 }
 
 func binToInt(binary string) int {
