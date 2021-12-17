@@ -60,39 +60,8 @@ const TYPE_ID_GT: usize = 5;
 const TYPE_ID_LT: usize = 6;
 const TYPE_ID_EQ: usize = 7;
 
-// const DEBUG: bool = true;
-const DEBUG: bool = false;
-
-fn deref(packet: &Packet) -> usize {
-    match packet {
-        Packet::Literal(p) => p.value.expect("Packet must have a value"),
-        Packet::Operator(p) => p.value.expect("Packet must have a value"),
-        Packet::Uninitialized => 0,
-    }
-}
-
-fn packet_length(packet: &Packet) -> usize {
-    match packet {
-        Packet::Literal(p) => p.length.expect("Packet must have a length"),
-        Packet::Operator(p) => p.length.expect("Packet must have a length"),
-        Packet::Uninitialized => 0,
-    }
-}
-
-fn packet_slice<'a>(s: &'a str, cursor: &mut usize, amount: usize) -> &'a str {
-    let slice = &s[*cursor..*cursor + amount];
-
-    *cursor += amount;
-
-    slice
-}
-
 fn parse_packet<'a>(bits: &'a str) -> Result<Packet, Box<dyn Error>> {
     use ParserState::*;
-
-    if DEBUG {
-        println!("Beginning parsing for {}", bits);
-    }
 
     let mut packet = Packet::Uninitialized;
     let mut version = 0;
@@ -107,10 +76,6 @@ fn parse_packet<'a>(bits: &'a str) -> Result<Packet, Box<dyn Error>> {
     let cursor = &mut parser.cursor;
 
     while *state != Finished {
-        if DEBUG {
-            println!("Main Parser Loop: {:?}", state);
-        }
-
         match state {
             // parse first 3 bits (version)
             ParseVersion => {
@@ -200,18 +165,14 @@ fn parse_packet<'a>(bits: &'a str) -> Result<Packet, Box<dyn Error>> {
                 if let Packet::Operator(ref mut o) = packet {
                     let mut parsed_length: usize = 0;
 
-                    // parse sub packets
                     while parsed_length < *total_length {
                         let mut remaining_packets: &str = &parser.bits[*cursor..];
                         let parsed_packet = remaining_packets.parse::<Packet>()?;
-
-                        if DEBUG {
-                            println!("Parsed Packet: {:?}", parsed_packet);
-                        }
-
                         let packet_len = packet_length(&parsed_packet);
+
                         parsed_length += packet_len;
                         *cursor += packet_len;
+
                         o.packets.push(Box::new(parsed_packet));
                     }
 
@@ -286,15 +247,12 @@ fn parse_packet<'a>(bits: &'a str) -> Result<Packet, Box<dyn Error>> {
             }
 
             Finished => unreachable!(),
-
-            _ => panic!("Unknown parser state!"),
         }
     }
 
     Ok(packet)
 }
 
-// TODO(shawk): add additional error metadata
 #[derive(Debug)]
 pub struct PacketParseError;
 
@@ -339,6 +297,30 @@ fn bin_to_int(s: &str) -> Result<usize, Box<dyn Error>> {
         .join("");
 
     Ok(usize::from_str_radix(&bit_string, 2)?)
+}
+
+fn deref(packet: &Packet) -> usize {
+    match packet {
+        Packet::Literal(p) => p.value.expect("Packet must have a value"),
+        Packet::Operator(p) => p.value.expect("Packet must have a value"),
+        Packet::Uninitialized => 0,
+    }
+}
+
+fn packet_length(packet: &Packet) -> usize {
+    match packet {
+        Packet::Literal(p) => p.length.expect("Packet must have a length"),
+        Packet::Operator(p) => p.length.expect("Packet must have a length"),
+        Packet::Uninitialized => 0,
+    }
+}
+
+fn packet_slice<'a>(s: &'a str, cursor: &mut usize, amount: usize) -> &'a str {
+    let slice = &s[*cursor..*cursor + amount];
+
+    *cursor += amount;
+
+    slice
 }
 
 #[aoc_generator(day16)]
