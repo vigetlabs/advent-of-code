@@ -15,15 +15,6 @@ def split_inputs_from_first_line():
     first_line_as_str = input_lines[0]
     return first_line_as_str.split(",")
 
-# Part 1
-
-# def connected_caves(tunnel_lst):
-#     return [conn.split("-") for conn in tunnel_lst]
-
-
-# def caves_from(tunnel_lst, cave):
-#     return [cave for cave in tunnel_lst if ]
-
 # Utilities
 
 def flatten(lst):
@@ -70,7 +61,8 @@ def count_distinct_paths(tunnels):
 # Write solution
 
 if __name__ == '__main__':
-    part_1_result = "TODO"
+    input_tunnels = read_input_lines()
+    part_1_result = count_distinct_paths(input_tunnels)
     part_2_result = "TODO"
     solution = str(part_1_result) + "\n" + str(part_2_result)
     write_solution(solution)
