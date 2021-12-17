@@ -5,12 +5,11 @@ import (
   "os"
   "strings"
   "strconv"
+
+  "day_16/value"
 )
 
 const headerLength = 6
-
-// const debug = true
-const debug = false
 
 const readingHex = true
 // const readingHex = false
@@ -22,8 +21,9 @@ const filename = "input.txt"
 type Packet struct {
   version int
   packetType string      // "operator" | "literal"
+  packetTypeId int       // when "operator"
   subPackets [](*Packet) // when "operator"
-  value int              // when "literal"
+  rawValue int           // when "literal"
   binary string
   length int
 }
@@ -41,7 +41,8 @@ func main() {
 
   packet := readPacket(binary)
 
-  solvePartOne(packet)
+  // solvePartOne(packet)
+  solvePartTwo(packet)
 }
 
 func solvePartOne(packet Packet) {
@@ -50,6 +51,10 @@ func solvePartOne(packet Packet) {
   countVersion(&sum, packet)
 
   fmt.Println("packet sum: ", sum)
+}
+
+func solvePartTwo(packet Packet) {
+  fmt.Println("packet value: ", packet.value())
 }
 
 func countVersion(sum *int, packet Packet) {
@@ -76,6 +81,7 @@ func readOperatorPacket(binary string) Packet {
   operatorPacket := Packet {
     version: binToInt(binary[0:3]),
     packetType: "operator",
+    packetTypeId: binToInt(binary[3:6]),
   }
 
   packetLength := 0
@@ -116,13 +122,13 @@ func readOperatorPacket(binary string) Packet {
 }
 
 func readLiteralPacket(binary string) Packet {
-  value, bodyLength := walkOverLiteral(binary)
+  rawValue, bodyLength := walkOverLiteral(binary)
   packetLength := headerLength + bodyLength
 
   packet := Packet {
     version: binToInt(binary[0:3]),
     packetType: "literal",
-    value: value,
+    rawValue: rawValue,
     binary: binary[0:packetLength],
     length: packetLength,
   }
@@ -130,7 +136,7 @@ func readLiteralPacket(binary string) Packet {
   return packet
 }
 
-func walkOverLiteral(binary string) (value int, length int) {
+func walkOverLiteral(binary string) (int, int) {
   onLastBit := false
   step := 0
   valueString := ""
@@ -151,7 +157,36 @@ func walkOverLiteral(binary string) (value int, length int) {
   return binToInt(valueString), step * 5
 }
 
+func (packet *Packet) value() int {
+  if packet.packetType == "literal" {
+    return packet.rawValue
+  } else {
+    values := make([]int, len(packet.subPackets))
+    for index, subPacket := range packet.subPackets {
+      values[index] = subPacket.value()
+    }
 
+    switch packet.packetTypeId {
+    case 0:
+      return value.Sum(values)
+    case 1:
+      return value.Product(values)
+    case 2:
+      return value.Min(values)
+    case 3:
+      return value.Max(values)
+    case 5:
+      return value.GreaterThan(values)
+    case 6:
+      return value.LessThan(values)
+    case 7:
+      return value.EqualTo(values)
+    }
+
+    // Never gets here
+    return 0
+  }
+}
 
 // HELPERS
 var HEXMAP = map[string]string {
