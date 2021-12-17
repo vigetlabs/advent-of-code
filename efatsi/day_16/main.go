@@ -21,8 +21,7 @@ type Packet struct {
   subPackets [](*Packet) // when "operator"
   value int              // when "literal"
   binary string
-  startIndex int
-  endIndex int
+  length int
 }
 
 func main() {
@@ -41,29 +40,65 @@ func readPacket(binary string) Packet {
   if packetType == "literal" {
     return readLiteralPacket(binary)
   } else {
-    // TODO: read operator
-    return readLiteralPacket(binary)
+    return readOperatorPacket(binary)
   }
 }
 
 func readLiteralPacket(binary string) Packet {
   value, bodyLength := walkOverLiteral(binary)
-  endIndex := 0 + headerLength + bodyLength
+  packetLength := headerLength + bodyLength
+
+  if debug {
+    fmt.Println("Reading literal binary:", binary)
+  }
 
   packet := Packet {
     version: binToInt(binary[0:3]),
     packetType: "literal",
     value: value,
-    binary: binary[0:endIndex],
-    startIndex: 0,
-    endIndex: endIndex,
+    binary: binary[0:packetLength],
+    length: packetLength,
   }
 
-  // if debug {
-  //   fmt.Println("packet: ", packet)
-  // }
-
   return packet
+}
+
+func readOperatorPacket(binary string) Packet {
+  if debug {
+    fmt.Println("Reading operator binary:", binary)
+  }
+
+  lengthType := binary[6:7]
+
+  operatorPacket := Packet {
+    version: binToInt(binary[0:3]),
+    packetType: "operator",
+    // binary: binary[0:length],
+    // length: length,
+  }
+
+  if lengthType == "0" {
+    // read next 15 bits [7:7+15]
+    // this is length of bits to read into until subpackets are done
+    bitCount := binary[7:7+15]
+    fmt.Println("bitCount", bitCount)
+    // while
+  } else {
+    // read next 11 bits [7:7+11]
+    // this is number of subpackets
+    packetCount := binToInt(binary[7:7+11])
+    readOffset := 0
+
+    for i := 0; i < packetCount; i++ {
+      newPacket := readPacket(binary[7+11+readOffset:])
+      fmt.Println("newPacket", newPacket)
+
+      operatorPacket.subPackets = append(operatorPacket.subPackets, &newPacket)
+      readOffset += newPacket.length
+    }
+  }
+
+  return operatorPacket
 }
 
 func walkOverLiteral(binary string) (value int, length int) {
@@ -80,6 +115,13 @@ func walkOverLiteral(binary string) (value int, length int) {
     }
 
     valueString += nextBits[1:]
+
+    if debug {
+      fmt.Println("")
+      fmt.Println("step:       ", step)
+      fmt.Println("nextBits:   ", nextBits)
+      fmt.Println("valueString:", valueString)
+    }
 
     step++
   }
