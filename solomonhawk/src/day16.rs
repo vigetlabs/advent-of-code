@@ -1,5 +1,3 @@
-#![allow(unused)]
-
 use std::error::Error;
 use std::fmt;
 use std::str::FromStr;
@@ -23,48 +21,80 @@ enum ParserState {
     Finished,
 }
 
-#[derive(Debug)]
-enum Packet {
-    Uninitialized,
-    Literal(LiteralPacket),
-    Operator(OperatorPacket),
+#[derive(Debug, PartialEq)]
+enum PacketType {
+    Unknown,
+    Literal,
+    Operator(OperatorType),
 }
 
 #[derive(Debug)]
-struct LiteralPacket {
-    version: usize,
-    type_id: usize,
-    value: Option<usize>,
-    length: Option<usize>, // total bits in this packet
+enum LengthType {
+    Length = 0,
+    Count = 1,
+    Unknown = 2,
+}
+
+impl LengthType {
+    fn from_usize(value: usize) -> LengthType {
+        match value {
+            0 => LengthType::Length,
+            1 => LengthType::Count,
+            2 => LengthType::Unknown,
+            _ => panic!("Unknown length type value: {}", value),
+        }
+    }
+}
+
+#[derive(Debug, PartialEq)]
+enum OperatorType {
+    Sum = 0,
+    Product = 1,
+    Min = 2,
+    Max = 3,
+    Literal = 4,
+    Gt = 5,
+    Lt = 6,
+    Eq = 7,
+}
+
+impl OperatorType {
+    fn from_usize(value: usize) -> OperatorType {
+        match value {
+            0 => OperatorType::Sum,
+            1 => OperatorType::Product,
+            2 => OperatorType::Min,
+            3 => OperatorType::Max,
+            4 => OperatorType::Literal,
+            5 => OperatorType::Gt,
+            6 => OperatorType::Lt,
+            7 => OperatorType::Eq,
+            _ => panic!("Unknown operator type value: {}", value),
+        }
+    }
 }
 
 #[derive(Debug)]
-struct OperatorPacket {
+struct Packet {
     version: usize,
-    type_id: usize,
-    length_type_id: Option<usize>,
-    length: Option<usize>, // total bits in this packet
+    packet_type: PacketType,
+    length_type: LengthType,
+    length: Option<usize>,
     packets: Vec<Box<Packet>>,
     value: Option<usize>,
 }
 
-const LENGTH_TYPE_LENGTH: usize = 0;
-const LENGTH_TYPE_COUNT: usize = 1;
-
-const TYPE_ID_SUM: usize = 0;
-const TYPE_ID_PRODUCT: usize = 1;
-const TYPE_ID_MIN: usize = 2;
-const TYPE_ID_MAX: usize = 3;
-const TYPE_ID_LITERAL: usize = 4;
-const TYPE_ID_GT: usize = 5;
-const TYPE_ID_LT: usize = 6;
-const TYPE_ID_EQ: usize = 7;
-
 fn parse_packet<'a>(bits: &'a str) -> Result<Packet, Box<dyn Error>> {
     use ParserState::*;
 
-    let mut packet = Packet::Uninitialized;
-    let mut version = 0;
+    let mut packet = Packet {
+        version: 0,
+        packet_type: PacketType::Unknown,
+        length_type: LengthType::Unknown,
+        length: None,
+        packets: vec![],
+        value: None,
+    };
 
     let mut parser = Parser {
         bits,
@@ -77,175 +107,162 @@ fn parse_packet<'a>(bits: &'a str) -> Result<Packet, Box<dyn Error>> {
 
     while *state != Finished {
         match state {
-            // parse first 3 bits (version)
+            // 3 bits (version)
             ParseVersion => {
-                version = bin_to_int(&packet_slice(&parser.bits, cursor, 3))?;
+                packet.version = bin_to_int(&packet_slice(&parser.bits, cursor, 3))?;
                 *state = ParseTypeID;
             }
 
-            // parse second 3 bits (type id) - concretes packet kind
+            // 3 bits (type id)
             ParseTypeID => {
-                let type_id = bin_to_int(&packet_slice(&parser.bits, cursor, 3))?;
+                let operator_type =
+                    OperatorType::from_usize(bin_to_int(&packet_slice(&parser.bits, cursor, 3))?);
 
-                match type_id {
-                    t if t == TYPE_ID_LITERAL => {
-                        packet = Packet::Literal(LiteralPacket {
-                            version,
-                            type_id,
-                            value: None,
-                            length: None,
-                        });
-
+                match operator_type {
+                    OperatorType::Literal => {
+                        packet.packet_type = PacketType::Literal;
                         *state = ParseLiteralValue;
                     }
-                    _ => {
-                        packet = Packet::Operator(OperatorPacket {
-                            version,
-                            type_id,
-                            length_type_id: None,
-                            length: None,
-                            value: None,
-                            packets: Vec::new(),
-                        });
-
+                    t => {
+                        packet.packet_type = PacketType::Operator(t);
                         *state = ParseLengthTypeID;
                     }
                 }
             }
 
+            // 1 bit (length type id)
             ParseLengthTypeID => {
-                if let Packet::Operator(ref mut o) = packet {
-                    o.length_type_id = Some(bin_to_int(&packet_slice(&parser.bits, cursor, 1))?);
-                }
+                packet.length_type =
+                    LengthType::from_usize(bin_to_int(&packet_slice(&parser.bits, cursor, 1))?);
 
                 *state = ParseLength;
             }
 
+            // 11 or 15 bits, depending on length type id
             ParseLength => {
-                if let Packet::Operator(ref mut o) = packet {
-                    match o.length_type_id {
-                        // next 15 bits are a number that represents the total length in bits contained by this packet
-                        Some(l) if l == LENGTH_TYPE_LENGTH => {
-                            let length_bit_string = &packet_slice(&parser.bits, cursor, 15);
-                            *state = ParseSubPacketsByLength(bin_to_int(&length_bit_string)?);
-                        }
-                        // next 11 bits are a number that represents the number of sub-packets immediately contained by this packet
-                        Some(l) if l == LENGTH_TYPE_COUNT => {
-                            let length_bit_string = &packet_slice(&parser.bits, cursor, 11);
-                            *state = ParseSubPacketsByCount(bin_to_int(&length_bit_string)?);
-                        }
-
-                        _ => unreachable!(),
+                match packet.length_type {
+                    // next 15 bits are a number that represents the total length in bits contained by this packet
+                    LengthType::Length => {
+                        let length_bit_string = &packet_slice(&parser.bits, cursor, 15);
+                        *state = ParseSubPacketsByLength(bin_to_int(&length_bit_string)?);
                     }
+                    // next 11 bits are a number that represents the number of sub-packets immediately contained by this packet
+                    LengthType::Count => {
+                        let length_bit_string = &packet_slice(&parser.bits, cursor, 11);
+                        *state = ParseSubPacketsByCount(bin_to_int(&length_bit_string)?);
+                    }
+
+                    _ => unreachable!(),
                 }
             }
 
+            // variable length, chunks of 5, last chunk denoted by leading 0
             ParseLiteralValue => {
-                if let Packet::Literal(ref mut p) = packet {
-                    let mut slice;
-                    let mut bin_string = String::new();
+                let mut slice;
+                let mut bin_string = String::new();
 
-                    loop {
-                        slice = packet_slice(&parser.bits, cursor, 5);
-                        bin_string.push_str(&slice.chars().skip(1).collect::<String>());
+                loop {
+                    slice = packet_slice(&parser.bits, cursor, 5);
+                    bin_string.push_str(&slice.chars().skip(1).collect::<String>());
 
-                        if slice.chars().nth(0) == Some('0') {
-                            break;
-                        }
+                    if slice.chars().nth(0) == Some('0') {
+                        break;
                     }
-
-                    p.length = Some(*cursor);
-                    p.value = Some(bin_to_int(&bin_string)?);
                 }
+
+                packet.length = Some(*cursor);
+                packet.value = Some(bin_to_int(&bin_string)?);
 
                 *state = Finished;
             }
 
+            // sub packets with known length (recurse)
             ParseSubPacketsByLength(total_length) => {
-                if let Packet::Operator(ref mut o) = packet {
-                    let mut parsed_length: usize = 0;
+                let mut parsed_length: usize = 0;
 
-                    while parsed_length < *total_length {
-                        let mut remaining_packets: &str = &parser.bits[*cursor..];
-                        let parsed_packet = remaining_packets.parse::<Packet>()?;
-                        let packet_len = packet_length(&parsed_packet);
+                while parsed_length < *total_length {
+                    let remaining_packets: &str = &parser.bits[*cursor..];
+                    let parsed_packet = remaining_packets.parse::<Packet>()?;
+                    let packet_len = &parsed_packet.length.expect("Packet must have a length");
 
-                        parsed_length += packet_len;
-                        *cursor += packet_len;
+                    parsed_length += packet_len;
+                    *cursor += packet_len;
 
-                        o.packets.push(Box::new(parsed_packet));
-                    }
-
-                    o.length = Some(*cursor);
+                    packet.packets.push(Box::new(parsed_packet));
                 }
+
+                packet.length = Some(*cursor);
 
                 *state = CalculateOperationValue;
             }
 
+            // sub packets with known count (recurse)
             ParseSubPacketsByCount(total_count) => {
-                if let Packet::Operator(ref mut o) = packet {
-                    let mut parsed_count: usize = 0;
+                let mut parsed_count: usize = 0;
 
-                    while parsed_count < *total_count {
-                        let parsed_packet = parser.bits[*cursor..].parse::<Packet>()?;
-                        parsed_count += 1;
-                        *cursor += packet_length(&parsed_packet);
+                while parsed_count < *total_count {
+                    let parsed_packet = parser.bits[*cursor..].parse::<Packet>()?;
+                    parsed_count += 1;
+                    *cursor += &parsed_packet.length.expect("Packet must have a length");
 
-                        o.packets.push(Box::new(parsed_packet));
-                    }
-
-                    o.length = Some(*cursor);
+                    packet.packets.push(Box::new(parsed_packet));
                 }
+
+                packet.length = Some(*cursor);
 
                 *state = CalculateOperationValue;
             }
 
+            // after parsing, a value can be computed for operator type packets
             CalculateOperationValue => {
-                if let Packet::Operator(ref mut o) = packet {
-                    match o.type_id {
-                        t if t == TYPE_ID_SUM => {
-                            o.value = Some(o.packets.iter().map(|p| deref(p)).sum());
-                        }
-
-                        t if t == TYPE_ID_PRODUCT => {
-                            o.value = Some(o.packets.iter().map(|p| deref(p)).product());
-                        }
-
-                        t if t == TYPE_ID_MIN => o.value = o.packets.iter().map(|p| deref(p)).min(),
-
-                        t if t == TYPE_ID_MAX => o.value = o.packets.iter().map(|p| deref(p)).max(),
-
-                        t if t == TYPE_ID_GT => {
-                            o.value = if deref(&o.packets[0]) > deref(&o.packets[1]) {
-                                Some(1)
-                            } else {
-                                Some(0)
-                            }
-                        }
-
-                        t if t == TYPE_ID_LT => {
-                            o.value = if deref(&o.packets[0]) < deref(&o.packets[1]) {
-                                Some(1)
-                            } else {
-                                Some(0)
-                            }
-                        }
-
-                        t if t == TYPE_ID_EQ => {
-                            o.value = if deref(&o.packets[0]) == deref(&o.packets[1]) {
-                                Some(1)
-                            } else {
-                                Some(0)
-                            }
-                        }
-
-                        _ => unreachable!(),
+                match packet.packet_type {
+                    PacketType::Operator(OperatorType::Sum) => {
+                        packet.value = Some(packet.packets.iter().map(|p| deref(p)).sum());
                     }
+
+                    PacketType::Operator(OperatorType::Product) => {
+                        packet.value = Some(packet.packets.iter().map(|p| deref(p)).product());
+                    }
+
+                    PacketType::Operator(OperatorType::Min) => {
+                        packet.value = packet.packets.iter().map(|p| deref(p)).min()
+                    }
+
+                    PacketType::Operator(OperatorType::Max) => {
+                        packet.value = packet.packets.iter().map(|p| deref(p)).max()
+                    }
+
+                    PacketType::Operator(OperatorType::Gt) => {
+                        packet.value = if deref(&packet.packets[0]) > deref(&packet.packets[1]) {
+                            Some(1)
+                        } else {
+                            Some(0)
+                        }
+                    }
+
+                    PacketType::Operator(OperatorType::Lt) => {
+                        packet.value = if deref(&packet.packets[0]) < deref(&packet.packets[1]) {
+                            Some(1)
+                        } else {
+                            Some(0)
+                        }
+                    }
+
+                    PacketType::Operator(OperatorType::Eq) => {
+                        packet.value = if deref(&packet.packets[0]) == deref(&packet.packets[1]) {
+                            Some(1)
+                        } else {
+                            Some(0)
+                        }
+                    }
+
+                    _ => unreachable!(),
                 }
 
                 *state = Finished;
             }
 
+            // "This should never happen." -Solomon Hawk, 12/16/2021
             Finished => unreachable!(),
         }
     }
@@ -300,21 +317,16 @@ fn bin_to_int(s: &str) -> Result<usize, Box<dyn Error>> {
 }
 
 fn deref(packet: &Packet) -> usize {
-    match packet {
-        Packet::Literal(p) => p.value.expect("Packet must have a value"),
-        Packet::Operator(p) => p.value.expect("Packet must have a value"),
-        Packet::Uninitialized => 0,
+    match packet.value {
+        Some(p) => p,
+        None => panic!("Cannot deref a packet without a value"),
     }
 }
 
-fn packet_length(packet: &Packet) -> usize {
-    match packet {
-        Packet::Literal(p) => p.length.expect("Packet must have a length"),
-        Packet::Operator(p) => p.length.expect("Packet must have a length"),
-        Packet::Uninitialized => 0,
-    }
-}
-
+/**
+ * Returns a string slice of a packet binary string starting at `cursor` and
+ * ending at `cursor + amount`. Also increments `cursor` by `amount`.
+ */
 fn packet_slice<'a>(s: &'a str, cursor: &mut usize, amount: usize) -> &'a str {
     let slice = &s[*cursor..*cursor + amount];
 
@@ -339,11 +351,7 @@ fn part2(packet: &Packet) -> usize {
 }
 
 fn version_sum(packet: &Packet) -> usize {
-    match packet {
-        Packet::Literal(p) => p.version,
-        Packet::Operator(o) => o.version + o.packets.iter().map(|p| version_sum(p)).sum::<usize>(),
-        Packet::Uninitialized => 0,
-    }
+    packet.version + packet.packets.iter().map(|p| version_sum(p)).sum::<usize>()
 }
 
 #[cfg(test)]
@@ -355,11 +363,9 @@ mod tests {
         let input = "D2FE28";
         let packet: Packet = input.parse().unwrap();
 
-        if let Packet::Literal(p) = &packet {
-            assert_eq!(p.version, 6);
-            assert_eq!(p.type_id, 4);
-            assert_eq!(p.value, Some(2021));
-        }
+        assert_eq!(packet.version, 6);
+        assert_eq!(packet.packet_type, PacketType::Literal);
+        assert_eq!(packet.value, Some(2021));
 
         assert_eq!(version_sum(&packet), 6);
     }
@@ -369,10 +375,8 @@ mod tests {
         let input = "38006F45291200";
         let packet: Packet = input.parse().unwrap();
 
-        if let Packet::Operator(o) = &packet {
-            assert_eq!(o.version, 1);
-            assert_eq!(o.type_id, 6);
-        }
+        assert_eq!(packet.version, 1);
+        assert_eq!(packet.packet_type, PacketType::Operator(OperatorType::Lt));
 
         assert_eq!(version_sum(&packet), 9);
     }
@@ -386,9 +390,7 @@ mod tests {
         let input = "8A004A801A8002F478";
         let packet: Packet = input.parse().unwrap();
 
-        if let Packet::Operator(o) = &packet {
-            assert_eq!(o.version, 4);
-        }
+        assert_eq!(packet.version, 4);
 
         assert_eq!(version_sum(&packet), 16);
     }
@@ -401,9 +403,7 @@ mod tests {
         let input = "620080001611562C8802118E34";
         let packet: Packet = input.parse().unwrap();
 
-        if let Packet::Operator(o) = &packet {
-            assert_eq!(o.version, 3);
-        }
+        assert_eq!(packet.version, 3);
 
         assert_eq!(version_sum(&packet), 12);
     }
@@ -416,9 +416,7 @@ mod tests {
         let input = "C0015000016115A2E0802F182340";
         let packet: Packet = input.parse().unwrap();
 
-        if let Packet::Operator(o) = &packet {
-            assert_eq!(o.version, 6);
-        }
+        assert_eq!(packet.version, 6);
 
         assert_eq!(version_sum(&packet), 23);
     }
@@ -431,9 +429,7 @@ mod tests {
         let input = "A0016C880162017C3686B18A3D4780";
         let packet: Packet = input.parse().unwrap();
 
-        if let Packet::Operator(o) = &packet {
-            assert_eq!(o.version, 5);
-        }
+        assert_eq!(packet.version, 5);
 
         assert_eq!(version_sum(&packet), 31);
     }
@@ -444,11 +440,7 @@ mod tests {
         let input = "C200B40A82";
         let packet: Packet = input.parse().unwrap();
 
-        if let Packet::Operator(o) = &packet {
-            assert_eq!(o.value, Some(3));
-        } else {
-            assert!(false)
-        }
+        assert_eq!(packet.value, Some(3));
     }
 
     #[test]
@@ -457,11 +449,7 @@ mod tests {
         let input = "04005AC33890";
         let packet: Packet = input.parse().unwrap();
 
-        if let Packet::Operator(o) = &packet {
-            assert_eq!(o.value, Some(54));
-        } else {
-            assert!(false)
-        }
+        assert_eq!(packet.value, Some(54));
     }
 
     #[test]
@@ -470,11 +458,7 @@ mod tests {
         let input = "880086C3E88112";
         let packet: Packet = input.parse().unwrap();
 
-        if let Packet::Operator(o) = &packet {
-            assert_eq!(o.value, Some(7));
-        } else {
-            assert!(false)
-        }
+        assert_eq!(packet.value, Some(7));
     }
 
     #[test]
@@ -483,11 +467,7 @@ mod tests {
         let input = "CE00C43D881120";
         let packet: Packet = input.parse().unwrap();
 
-        if let Packet::Operator(o) = &packet {
-            assert_eq!(o.value, Some(9));
-        } else {
-            assert!(false)
-        }
+        assert_eq!(packet.value, Some(9));
     }
 
     #[test]
@@ -496,11 +476,7 @@ mod tests {
         let input = "D8005AC2A8F0";
         let packet: Packet = input.parse().unwrap();
 
-        if let Packet::Operator(o) = &packet {
-            assert_eq!(o.value, Some(1));
-        } else {
-            assert!(false)
-        }
+        assert_eq!(packet.value, Some(1));
     }
 
     #[test]
@@ -509,11 +485,7 @@ mod tests {
         let input = "F600BC2D8F";
         let packet: Packet = input.parse().unwrap();
 
-        if let Packet::Operator(o) = &packet {
-            assert_eq!(o.value, Some(0));
-        } else {
-            assert!(false)
-        }
+        assert_eq!(packet.value, Some(0));
     }
 
     #[test]
@@ -522,11 +494,7 @@ mod tests {
         let input = "9C005AC2F8F0";
         let packet: Packet = input.parse().unwrap();
 
-        if let Packet::Operator(o) = &packet {
-            assert_eq!(o.value, Some(0));
-        } else {
-            assert!(false)
-        }
+        assert_eq!(packet.value, Some(0));
     }
 
     #[test]
@@ -535,10 +503,6 @@ mod tests {
         let input = "9C0141080250320F1802104A08";
         let packet: Packet = input.parse().unwrap();
 
-        if let Packet::Operator(o) = &packet {
-            assert_eq!(o.value, Some(1));
-        } else {
-            assert!(false)
-        }
+        assert_eq!(packet.value, Some(1));
     }
 }
