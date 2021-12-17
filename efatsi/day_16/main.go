@@ -39,11 +39,6 @@ func main() {
     binary = string(hexInput)
   }
 
-  if debug {
-    fmt.Println("Hex    input:", hexInput)
-    fmt.Println("Binary input:", binary)
-  }
-
   packet := readPacket(binary)
 
   solvePartOne(packet)
@@ -66,28 +61,16 @@ func countVersion(sum *int, packet Packet) {
 }
 
 func readPacket(binary string) Packet {
-  var packet Packet
   packetType := versionFrom(binToInt(binary[3:6]))
 
   if packetType == "literal" {
-    packet = readLiteralPacket(binary)
+    return readLiteralPacket(binary)
   } else {
-    packet = readOperatorPacket(binary)
+    return readOperatorPacket(binary)
   }
-
-  if debug {
-    fmt.Println("read packet:", packet)
-    fmt.Println("")
-  }
-
-  return packet
 }
 
 func readOperatorPacket(binary string) Packet {
-  if debug {
-    fmt.Println("Reading operator:", binary)
-  }
-
   lengthType := binary[6:7]
 
   operatorPacket := Packet {
@@ -100,14 +83,6 @@ func readOperatorPacket(binary string) Packet {
     // read next 15 bits [7:7+15]
     // this is length of bits to read into until subpackets are done
     bitCount := binToInt(binary[7:7+15])
-
-    if debug {
-      fmt.Println("")
-      fmt.Println("  Counting bits.")
-      fmt.Println("  bit count:", bitCount)
-      fmt.Println("  body:     ", binary[7+15:7+15+bitCount])
-      fmt.Println("")
-    }
 
     readOffset := 0
     for (readOffset < bitCount) {
@@ -122,14 +97,6 @@ func readOperatorPacket(binary string) Packet {
     // read next 11 bits [7:7+11]
     // this is number of subpackets
     packetCount := binToInt(binary[7:7+11])
-
-    if debug {
-      fmt.Println("")
-      fmt.Println("  Counting packets.")
-      fmt.Println("  packet count:", packetCount)
-      fmt.Println("  body:        ", binary[7+15:])
-      fmt.Println("")
-    }
 
     readOffset := 0
     for i := 0; i < packetCount; i++ {
@@ -149,11 +116,6 @@ func readOperatorPacket(binary string) Packet {
 }
 
 func readLiteralPacket(binary string) Packet {
-  if debug {
-    fmt.Println("Reading literal:", binary)
-    fmt.Println("")
-  }
-
   value, bodyLength := walkOverLiteral(binary)
   packetLength := headerLength + bodyLength
 
@@ -182,13 +144,6 @@ func walkOverLiteral(binary string) (value int, length int) {
     }
 
     valueString += nextBits[1:]
-
-    if debug {
-      fmt.Println("step:       ", step)
-      fmt.Println("nextBits:   ", nextBits)
-      fmt.Println("valueString:", valueString)
-      fmt.Println("")
-    }
 
     step++
   }
