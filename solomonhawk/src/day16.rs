@@ -4,7 +4,7 @@ use std::str::FromStr;
 
 struct Parser<'a> {
     bits: &'a str,
-    cursor: usize, // where in the bits we're at with parsing
+    cursor: usize,
     state: ParserState,
 }
 
@@ -109,20 +109,21 @@ fn parse_packet(bits: &str) -> Result<Packet, Box<dyn Error>> {
         match state {
             // 3 bits (version)
             ParseVersion => {
-                packet.version = bin_to_int(&packet_slice(&parser.bits, cursor, 3))?;
+                packet.version = bin_to_int(&slice_bits(&parser.bits, cursor, 3))?;
                 *state = ParseTypeID;
             }
 
             // 3 bits (type id)
             ParseTypeID => {
                 let operator_type =
-                    OperatorType::from_usize(bin_to_int(&packet_slice(&parser.bits, cursor, 3))?);
+                    OperatorType::from_usize(bin_to_int(&slice_bits(&parser.bits, cursor, 3))?);
 
                 match operator_type {
                     OperatorType::Literal => {
                         packet.packet_type = PacketType::Literal;
                         *state = ParseLiteralValue;
                     }
+
                     t => {
                         packet.packet_type = PacketType::Operator(t);
                         *state = ParseLengthTypeID;
@@ -133,8 +134,7 @@ fn parse_packet(bits: &str) -> Result<Packet, Box<dyn Error>> {
             // 1 bit (length type id)
             ParseLengthTypeID => {
                 packet.length_type =
-                    LengthType::from_usize(bin_to_int(&packet_slice(&parser.bits, cursor, 1))?);
-
+                    LengthType::from_usize(bin_to_int(&slice_bits(&parser.bits, cursor, 1))?);
                 *state = ParseLength;
             }
 
@@ -143,12 +143,13 @@ fn parse_packet(bits: &str) -> Result<Packet, Box<dyn Error>> {
                 match packet.length_type {
                     // next 15 bits are a number that represents the total length in bits contained by this packet
                     LengthType::Length => {
-                        let length_bit_string = &packet_slice(&parser.bits, cursor, 15);
+                        let length_bit_string = &slice_bits(&parser.bits, cursor, 15);
                         *state = ParseSubPacketsByLength(bin_to_int(&length_bit_string)?);
                     }
+
                     // next 11 bits are a number that represents the number of sub-packets immediately contained by this packet
                     LengthType::Count => {
-                        let length_bit_string = &packet_slice(&parser.bits, cursor, 11);
+                        let length_bit_string = &slice_bits(&parser.bits, cursor, 11);
                         *state = ParseSubPacketsByCount(bin_to_int(&length_bit_string)?);
                     }
 
@@ -159,11 +160,11 @@ fn parse_packet(bits: &str) -> Result<Packet, Box<dyn Error>> {
             // variable length, chunks of 5, last chunk denoted by leading 0
             ParseLiteralValue => {
                 let mut slice;
-                let mut bin_string = String::new();
+                let mut bit_string = String::new();
 
                 loop {
-                    slice = packet_slice(&parser.bits, cursor, 5);
-                    bin_string.push_str(&slice.chars().skip(1).collect::<String>());
+                    slice = slice_bits(&parser.bits, cursor, 5);
+                    bit_string.push_str(&slice.chars().skip(1).collect::<String>());
 
                     if slice.chars().nth(0) == Some('0') {
                         break;
@@ -171,18 +172,17 @@ fn parse_packet(bits: &str) -> Result<Packet, Box<dyn Error>> {
                 }
 
                 packet.length = Some(*cursor);
-                packet.value = Some(bin_to_int(&bin_string)?);
+                packet.value = Some(bin_to_int(&bit_string)?);
 
                 *state = Finished;
             }
 
             // sub packets with known length (recurse)
             ParseSubPacketsByLength(total_length) => {
-                let mut parsed_length: usize = 0;
+                let mut parsed_length = 0;
 
                 while parsed_length < *total_length {
-                    let remaining_packets: &str = &parser.bits[*cursor..];
-                    let parsed_packet = remaining_packets.parse::<Packet>()?;
+                    let parsed_packet: Packet = parser.bits[*cursor..].parse()?;
                     let packet_len = &parsed_packet.length.expect("Packet must have a length");
 
                     parsed_length += packet_len;
@@ -198,10 +198,10 @@ fn parse_packet(bits: &str) -> Result<Packet, Box<dyn Error>> {
 
             // sub packets with known count (recurse)
             ParseSubPacketsByCount(total_count) => {
-                let mut parsed_count: usize = 0;
+                let mut parsed_count = 0;
 
                 while parsed_count < *total_count {
-                    let parsed_packet = parser.bits[*cursor..].parse::<Packet>()?;
+                    let parsed_packet: Packet = parser.bits[*cursor..].parse()?;
                     parsed_count += 1;
                     *cursor += &parsed_packet.length.expect("Packet must have a length");
 
@@ -327,12 +327,13 @@ fn deref(packet: &Packet) -> usize {
  * Returns a string slice of a packet binary string starting at `cursor` and
  * ending at `cursor + amount`. Also increments `cursor` by `amount`.
  */
-fn packet_slice<'a>(s: &'a str, cursor: &mut usize, amount: usize) -> &'a str {
-    let slice = &s[*cursor..*cursor + amount];
-
+fn slice_bits<'a>(s: &'a str, cursor: &mut usize, amount: usize) -> &'a str {
     *cursor += amount;
+    &s[*cursor - amount..*cursor]
+}
 
-    slice
+fn version_sum(packet: &Packet) -> usize {
+    packet.version + packet.packets.iter().map(|p| version_sum(p)).sum::<usize>()
 }
 
 #[aoc_generator(day16)]
@@ -348,10 +349,6 @@ fn part1(packet: &Packet) -> usize {
 #[aoc(day16, part2)]
 fn part2(packet: &Packet) -> usize {
     deref(packet)
-}
-
-fn version_sum(packet: &Packet) -> usize {
-    packet.version + packet.packets.iter().map(|p| version_sum(p)).sum::<usize>()
 }
 
 #[cfg(test)]
