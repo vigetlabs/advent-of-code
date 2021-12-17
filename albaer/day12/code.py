@@ -33,13 +33,13 @@ def add_cave_to_path_list(path_list, cave):
     new_path_list.append(cave)
     return new_path_list
 
-def paths_from(tunnels, path_list):
+def paths_from(tunnels, path_list, valid):
     last_cave = path_list[-1]
     possible_next_caves = caves_connected_to(tunnels, last_cave)
-    valid_next_caves = [cave for cave in possible_next_caves if valid_next_cave(path_list, cave)]
+    valid_next_caves = [cave for cave in possible_next_caves if valid(path_list, cave)]
     return [add_cave_to_path_list(path_list, cave) for cave in valid_next_caves]
 
-def valid_next_cave(path_list, cave):
+def valid_part_1(path_list, cave):
     if cave == "start":
         return False
     elif cave.islower() and cave in path_list:
@@ -47,23 +47,23 @@ def valid_next_cave(path_list, cave):
     else:
         return True
 
-def find_paths(tunnels, paths=[["start"]], complete_paths=[]):
+def find_paths(tunnels, valid, paths=[["start"]], complete_paths=[], ):
     if paths == []:
         return complete_paths
     else:
-        all_paths = flatten([paths_from(tunnels, path) for path in paths])
+        all_paths = flatten([paths_from(tunnels, path, valid) for path in paths])
         new_complete_paths = complete_paths + [path for path in all_paths if path[-1] == "end"]
         new_paths = [path for path in all_paths if path[-1] != "end"]
-        return find_paths(tunnels, new_paths, new_complete_paths)
+        return find_paths(tunnels, valid, new_paths, new_complete_paths)
 
-def count_distinct_paths(tunnels):
-    return len(find_paths(tunnels))
+def count_distinct_paths(tunnels, valid):
+    return len(find_paths(tunnels, valid))
 
 # Write solution
 
 if __name__ == '__main__':
     input_tunnels = read_input_lines()
-    part_1_result = count_distinct_paths(input_tunnels)
+    part_1_result = count_distinct_paths(input_tunnels, valid_part_1)
     part_2_result = "TODO"
     solution = str(part_1_result) + "\n" + str(part_2_result)
     write_solution(solution)

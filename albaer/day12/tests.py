@@ -49,21 +49,36 @@ class TestDay12(unittest.TestCase):
     # Part 1
 
     def test_count_distinct_paths_a(self):
-        actual = count_distinct_paths(self.EXAMPLE_INPUT_A)
+        actual = count_distinct_paths(self.EXAMPLE_INPUT_A, valid_part_1)
         expected = 10
         self.assertEqual(actual, expected)
 
     def test_count_distinct_paths_b(self):
-        actual = count_distinct_paths(self.EXAMPLE_INPUT_B)
+        actual = count_distinct_paths(self.EXAMPLE_INPUT_B, valid_part_1)
         expected = 19
         self.assertEqual(actual, expected)
 
     def test_count_distinct_paths_c(self):
-        actual = count_distinct_paths(self.EXAMPLE_INPUT_C)
+        actual = count_distinct_paths(self.EXAMPLE_INPUT_C, valid_part_1)
         expected = 226
         self.assertEqual(actual, expected)
 
     # Part 2
+
+    # def test_count_distinct_paths_a(self):
+    #     actual = count_distinct_paths(self.EXAMPLE_INPUT_A)
+    #     expected = 36
+    #     self.assertEqual(actual, expected)
+
+    # def test_count_distinct_paths_b(self):
+    #     actual = count_distinct_paths(self.EXAMPLE_INPUT_B)
+    #     expected = 103
+    #     self.assertEqual(actual, expected)
+
+    # def test_count_distinct_paths_c(self):
+    #     actual = count_distinct_paths(self.EXAMPLE_INPUT_C)
+    #     expected = 3509
+    #     self.assertEqual(actual, expected)
 
 if __name__ == '__main__':
     unittest.main()
