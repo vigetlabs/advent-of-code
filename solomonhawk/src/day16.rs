@@ -84,7 +84,7 @@ struct Packet {
     value: Option<usize>,
 }
 
-fn parse_packet<'a>(bits: &'a str) -> Result<Packet, Box<dyn Error>> {
+fn parse_packet(bits: &str) -> Result<Packet, Box<dyn Error>> {
     use ParserState::*;
 
     let mut packet = Packet {
