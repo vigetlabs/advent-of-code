@@ -1,4 +1,5 @@
 from pprint import pprint
+from collections import Counter
 
 def write_solution(solution, output_file_path="solution.txt"):
     with open(output_file_path, "w") as output_file:
@@ -47,6 +48,17 @@ def valid_part_1(path_list, cave):
     else:
         return True
 
+def valid_part_2(path_list, cave):
+    small_caves = [cave for cave in path_list if cave.islower()]
+    already_visited_small_twice = [k for k, v in Counter(small_caves).items() if v > 1] != []
+    returning_to_small_cave = cave.islower() and cave in path_list
+    if cave == "start":
+        return False
+    elif already_visited_small_twice and returning_to_small_cave:
+        return False
+    else:
+        return True
+
 def find_paths(tunnels, valid, paths=[["start"]], complete_paths=[], ):
     if paths == []:
         return complete_paths
@@ -64,6 +76,6 @@ def count_distinct_paths(tunnels, valid):
 if __name__ == '__main__':
     input_tunnels = read_input_lines()
     part_1_result = count_distinct_paths(input_tunnels, valid_part_1)
-    part_2_result = "TODO"
+    part_2_result = count_distinct_paths(input_tunnels, valid_part_2)
     solution = str(part_1_result) + "\n" + str(part_2_result)
     write_solution(solution)
