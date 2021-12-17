@@ -48,14 +48,6 @@ class TestDay12(unittest.TestCase):
 
     # Part 1
 
-    # caves_connected_to(tunnels, cave):
-    # def test_caves_connected_to_a(self):
-    #     actual = caves_connected_to(self.EXAMPLE_INPUT_A, "start")
-    #     expected = ["A", "b"]
-    #     self.assertEqual(actual, expected)
-
-    # count_distinct_paths(tunnels)
-
     def test_count_distinct_paths_a(self):
         actual = count_distinct_paths(self.EXAMPLE_INPUT_A)
         expected = 10
