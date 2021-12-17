@@ -17,7 +17,7 @@ func Product(values []int) int {
 }
 
 func Min(values []int) int {
-  min := 1000000
+  min := 1000000000
   for _, val := range values {
     if (val < min) { min = val }
   }
