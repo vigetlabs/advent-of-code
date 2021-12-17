@@ -45,15 +45,31 @@ struct OperatorPacket {
     length_type_id: Option<usize>,
     length: Option<usize>, // total bits in this packet
     packets: Vec<Box<Packet>>,
+    value: Option<usize>,
 }
 
 const LENGTH_TYPE_LENGTH: usize = 0;
 const LENGTH_TYPE_COUNT: usize = 1;
 
+const TYPE_ID_SUM: usize = 0;
+const TYPE_ID_PRODUCT: usize = 1;
+const TYPE_ID_MIN: usize = 2;
+const TYPE_ID_MAX: usize = 3;
 const TYPE_ID_LITERAL: usize = 4;
+const TYPE_ID_GT: usize = 5;
+const TYPE_ID_LT: usize = 6;
+const TYPE_ID_EQ: usize = 7;
 
 // const DEBUG: bool = true;
 const DEBUG: bool = false;
+
+fn deref(packet: &Packet) -> usize {
+    match packet {
+        Packet::Literal(p) => p.value.expect("Packet must have a value"),
+        Packet::Operator(p) => p.value.expect("Packet must have a value"),
+        Packet::Uninitialized => 0,
+    }
+}
 
 fn packet_length(packet: &Packet) -> usize {
     match packet {
@@ -123,6 +139,7 @@ fn parse_packet<'a>(bits: &'a str) -> Result<Packet, Box<dyn Error>> {
                             type_id,
                             length_type_id: None,
                             length: None,
+                            value: None,
                             packets: Vec::new(),
                         });
 
@@ -201,7 +218,7 @@ fn parse_packet<'a>(bits: &'a str) -> Result<Packet, Box<dyn Error>> {
                     o.length = Some(*cursor);
                 }
 
-                *state = Finished;
+                *state = CalculateOperationValue;
             }
 
             ParseSubPacketsByCount(total_count) => {
@@ -217,6 +234,52 @@ fn parse_packet<'a>(bits: &'a str) -> Result<Packet, Box<dyn Error>> {
                     }
 
                     o.length = Some(*cursor);
+                }
+
+                *state = CalculateOperationValue;
+            }
+
+            CalculateOperationValue => {
+                if let Packet::Operator(ref mut o) = packet {
+                    match o.type_id {
+                        t if t == TYPE_ID_SUM => {
+                            o.value = Some(o.packets.iter().map(|p| deref(p)).sum());
+                        }
+
+                        t if t == TYPE_ID_PRODUCT => {
+                            o.value = Some(o.packets.iter().map(|p| deref(p)).product());
+                        }
+
+                        t if t == TYPE_ID_MIN => o.value = o.packets.iter().map(|p| deref(p)).min(),
+
+                        t if t == TYPE_ID_MAX => o.value = o.packets.iter().map(|p| deref(p)).max(),
+
+                        t if t == TYPE_ID_GT => {
+                            o.value = if deref(&o.packets[0]) > deref(&o.packets[1]) {
+                                Some(1)
+                            } else {
+                                Some(0)
+                            }
+                        }
+
+                        t if t == TYPE_ID_LT => {
+                            o.value = if deref(&o.packets[0]) < deref(&o.packets[1]) {
+                                Some(1)
+                            } else {
+                                Some(0)
+                            }
+                        }
+
+                        t if t == TYPE_ID_EQ => {
+                            o.value = if deref(&o.packets[0]) == deref(&o.packets[1]) {
+                                Some(1)
+                            } else {
+                                Some(0)
+                            }
+                        }
+
+                        _ => unreachable!(),
+                    }
                 }
 
                 *state = Finished;
@@ -290,7 +353,7 @@ fn part1(packet: &Packet) -> usize {
 
 #[aoc(day16, part2)]
 fn part2(packet: &Packet) -> usize {
-    0
+    deref(packet)
 }
 
 fn version_sum(packet: &Packet) -> usize {
@@ -391,5 +454,109 @@ mod tests {
         }
 
         assert_eq!(version_sum(&packet), 31);
+    }
+
+    #[test]
+    fn sum_op() {
+        // C200B40A82 finds the sum of 1 and 2, resulting in the value 3
+        let input = "C200B40A82";
+        let packet: Packet = input.parse().unwrap();
+
+        if let Packet::Operator(o) = &packet {
+            assert_eq!(o.value, Some(3));
+        } else {
+            assert!(false)
+        }
+    }
+
+    #[test]
+    fn product_op() {
+        // 04005AC33890 finds the product of 6 and 9, resulting in the value 54
+        let input = "04005AC33890";
+        let packet: Packet = input.parse().unwrap();
+
+        if let Packet::Operator(o) = &packet {
+            assert_eq!(o.value, Some(54));
+        } else {
+            assert!(false)
+        }
+    }
+
+    #[test]
+    fn min_op() {
+        // 880086C3E88112 finds the minimum of 7, 8, and 9, resulting in the value 7
+        let input = "880086C3E88112";
+        let packet: Packet = input.parse().unwrap();
+
+        if let Packet::Operator(o) = &packet {
+            assert_eq!(o.value, Some(7));
+        } else {
+            assert!(false)
+        }
+    }
+
+    #[test]
+    fn max_op() {
+        // CE00C43D881120 finds the maximum of 7, 8, and 9, resulting in the value 9
+        let input = "CE00C43D881120";
+        let packet: Packet = input.parse().unwrap();
+
+        if let Packet::Operator(o) = &packet {
+            assert_eq!(o.value, Some(9));
+        } else {
+            assert!(false)
+        }
+    }
+
+    #[test]
+    fn gt_op() {
+        // D8005AC2A8F0 produces 1, because 5 is less than 15
+        let input = "D8005AC2A8F0";
+        let packet: Packet = input.parse().unwrap();
+
+        if let Packet::Operator(o) = &packet {
+            assert_eq!(o.value, Some(1));
+        } else {
+            assert!(false)
+        }
+    }
+
+    #[test]
+    fn lt_op() {
+        // F600BC2D8F produces 0, because 5 is not greater than 15
+        let input = "F600BC2D8F";
+        let packet: Packet = input.parse().unwrap();
+
+        if let Packet::Operator(o) = &packet {
+            assert_eq!(o.value, Some(0));
+        } else {
+            assert!(false)
+        }
+    }
+
+    #[test]
+    fn eq_op() {
+        // 9C005AC2F8F0 produces 0, because 5 is not equal to 15.
+        let input = "9C005AC2F8F0";
+        let packet: Packet = input.parse().unwrap();
+
+        if let Packet::Operator(o) = &packet {
+            assert_eq!(o.value, Some(0));
+        } else {
+            assert!(false)
+        }
+    }
+
+    #[test]
+    fn eq_nested_op() {
+        // 9C0141080250320F1802104A08 produces 1, because 1 + 3 = 2 * 2
+        let input = "9C0141080250320F1802104A08";
+        let packet: Packet = input.parse().unwrap();
+
+        if let Packet::Operator(o) = &packet {
+            assert_eq!(o.value, Some(1));
+        } else {
+            assert!(false)
+        }
     }
 }
