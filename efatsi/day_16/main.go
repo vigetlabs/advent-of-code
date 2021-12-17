@@ -9,6 +9,8 @@ import (
   "day_16/value"
 )
 
+const debug = false
+
 const headerLength = 6
 
 const readingHex = true
@@ -41,7 +43,7 @@ func main() {
 
   packet := readPacket(binary)
 
-  // solvePartOne(packet)
+  solvePartOne(packet)
   solvePartTwo(packet)
 }
 
@@ -50,7 +52,7 @@ func solvePartOne(packet Packet) {
 
   countVersion(&sum, packet)
 
-  fmt.Println("packet sum: ", sum)
+  fmt.Println("version sum: ", sum)
 }
 
 func solvePartTwo(packet Packet) {
@@ -168,25 +170,25 @@ func (packet *Packet) value() int {
 
     switch packet.packetTypeId {
     case 0:
-      fmt.Println("Sum", values)
+      if debug { fmt.Println("Sum", values) }
       return value.Sum(values)
     case 1:
-      fmt.Println("Product", values)
+      if debug { fmt.Println("Product", values) }
       return value.Product(values)
     case 2:
-      fmt.Println("Min", values)
+      if debug { fmt.Println("Min", values) }
       return value.Min(values)
     case 3:
-      fmt.Println("Max", values)
+      if debug { fmt.Println("Max", values) }
       return value.Max(values)
     case 5:
-      fmt.Println("GreaterThan", values)
+      if debug { fmt.Println("GreaterThan", values) }
       return value.GreaterThan(values)
     case 6:
-      fmt.Println("LessThan", values)
+      if debug { fmt.Println("LessThan", values) }
       return value.LessThan(values)
     case 7:
-      fmt.Println("EqualTo", values)
+      if debug { fmt.Println("EqualTo", values) }
       return value.EqualTo(values)
     }
 
