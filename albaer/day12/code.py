@@ -22,9 +22,11 @@ def flatten(lst):
 
 # Part 1
 
-def caves_connected_to(tunnels, cave_a):
-    tunnels = [tunnel for tunnel in tunnels if cave_a in tunnel]
-    return [tunnel.replace(cave_a, "").replace("-", "") for tunnel in tunnels]
+def other_cave(tunnel, cave):
+    return tunnel.replace(cave, "").replace("-", "")
+
+def caves_connected_to(tunnels, cave):
+    return [other_cave(tunnel, cave) for tunnel in tunnels if cave in tunnel]
 
 def add_cave_to_path_list(path_list, cave):
     new_path_list = path_list.copy()
@@ -35,8 +37,7 @@ def paths_from(tunnels, path_list):
     last_cave = path_list[-1]
     possible_next_caves = caves_connected_to(tunnels, last_cave)
     valid_next_caves = [cave for cave in possible_next_caves if valid_next_cave(path_list, cave)]
-    result = [add_cave_to_path_list(path_list, cave) for cave in valid_next_caves]
-    return result
+    return [add_cave_to_path_list(path_list, cave) for cave in valid_next_caves]
 
 def valid_next_cave(path_list, cave):
     if cave == "start":
