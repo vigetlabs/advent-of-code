@@ -3,9 +3,12 @@ package main
 import (
   "fmt"
   "math"
+
+  "day_17/targeter"
+  "day_17/velocitier"
 )
 
-const debug = false
+const debug = true
 
 // Skip the parsing today
 // Example:
@@ -54,6 +57,10 @@ func solvePartTwo() {
 
   for step := 1; step <= maxSteps; step++ {
     for _, shot := range shotsWithStep(step) {
+      if debug {
+        printShot(shot)
+      }
+
       if !alreadyTracked(validShots, shot) {
         validShots = append(validShots, shot)
       }
@@ -66,120 +73,28 @@ func solvePartTwo() {
 func shotsWithStep(step int) []Shot {
   if debug { fmt.Println("Steps:", step) }
 
-  yTargets := getYTargets(step)
-  xTargets := getXTargets(step)
+  t := targeter.New(minX, maxX, minY, maxY, infiniteXs)
+  yTargets := t.GetYTargets(step)
+  xTargets := t.GetXTargets(step)
 
-  shots := assembleShots(xTargets, yTargets, step)
-
-  if debug {
-    if (len(shots) > 0) {
-      fmt.Println("Shots:")
-      for _, shot := range shots {
-        printShot(shot)
-      }
-    }
-    fmt.Println("")
-  }
-
-  return shots
-}
-
-func getYTargets(step int) []int {
-  yTargets := make([]int, 0)
-
-  for y := minY; y <= maxY; y++ {
-    if validYStep(y, step) {
-      yTargets = append(yTargets, y)
-    }
-  }
-
-  return yTargets
-}
-
-func getXTargets(step int) []int {
-  xTargets := make([]int, 0)
-
-  for x := minX; x <= maxX; x++ {
-    if validXStep(x, step) {
-      xTargets = append(xTargets, x)
-    }
-  }
-
-  return xTargets
-}
-
-func validYStep(y int, step int) bool {
-  // Nothing fancy about y steps except if the modulo matches
-  return moduloMatch(y, step)
-}
-
-func validXStep(x int, step int) bool {
-  // x is a little trickier:
-  // - check if modulo matches AND it's even possible for x to get there (since x velocity can never be negative)
-  // - OR check if we're on an infinite dropping column
-
-  return (moduloMatch(x, step) && x >= addToZero(step)) || contains(infiniteColsLessThan(step), x)
-}
-
-func moduloMatch(val int, step int) bool {
-  if step % 2 == 0 {
-    // even steps (eg: 5+4+3+2=14 -- 4 steps puts you on positions in between multiples of 4)
-    return (val + (step/2)) % step == 0
-  } else {
-    // odd steps (eg: 11+10+9=30 -- 3 steps puts you on positions that are multiples of 3)
-    return val % step == 0
-  }
-}
-
-func infiniteColsLessThan(step int) []int {
-  infiniteCols := make([]int, 0)
-
-  for xVelocity, _ := range infiniteXs {
-    if xVelocity < step {
-      infiniteCols = append(infiniteCols, addToZero(xVelocity))
-    }
-  }
-
-  return infiniteCols
+  return assembleShots(xTargets, yTargets, step)
 }
 
 func assembleShots(xTargets []int, yTargets []int, step int) []Shot {
   shots := make([]Shot, 0)
 
+  v := velocitier.New(infiniteXs)
+
   for _, xTarget := range xTargets {
     for _, yTarget := range yTargets {
-      xVelocity := getXVelocity(xTarget, step)
-      yVelocity := getYVelocity(yTarget, step)
+      xVelocity := v.GetXVelocity(xTarget, step)
+      yVelocity := v.GetYVelocity(yTarget, step)
 
       shots = append(shots, Shot{xVelocity, yVelocity, xTarget, yTarget})
     }
   }
 
   return shots
-}
-
-func getYVelocity(yTarget int, step int) int {
-  return step + getOffset(yTarget, step)
-}
-
-func getXVelocity(xTarget int, step int) int {
-  for velocity, target := range infiniteXs {
-    if (step >= velocity && target == xTarget) { return velocity }
-  }
-
-  return step + getOffset(xTarget, step)
-}
-
-func getOffset(target int, step int) int {
-  // eg: if heading towards -9 and it takes 2 steps
-  // - steps would be [-4, -5]
-  // - offset is calculatable by starting with sum([2, 1]) (`addToZero(step)`) and
-  //   figuring out how much each individual element needs to adjest to add up to `target`
-  // - in this case: (-9 - 3) / 2 = -6
-  //
-  // => so the first step of a downward trending array w/ len == steps and sum == target:
-  //    2 + -6 == -4
-  return (target - addToZero(step)) / step
 }
 
 func findInfinites() map[int]int {
@@ -210,16 +125,6 @@ func addToZero(input int) int {
 // oddly enough, solveQuadratic is the inverse of addToZero
 func solveQuadratic(c int) float64 {
   return (math.Sqrt(float64(8 * c) + 1) - 1)/ 2
-}
-
-func contains(slice []int, value int) bool {
-  for _, v := range slice {
-    if v == value {
-      return true
-    }
-  }
-
-  return false
 }
 
 func alreadyTracked(slice []Shot, shot Shot) bool {
