@@ -7,6 +7,20 @@ use std::ops::Add;
 use std::rc::Rc;
 use std::str::FromStr;
 
+/**
+ * This all seems like a LOT of ceremony just to keep track of the left/explode/
+ * right nodes while traversing the tree. I can't just use `Option` b/c it
+ * doesn't implement `Copy` (doesn't work when it's moved into the closure).
+ *
+ * The solution seems to be using RefCells around the options so that I can
+ * mutate the inner values from the callback.
+ *
+ * The other struggle is accessing the values inside the nodes.
+ *
+ * I need some indirection for the recursive tree structure, but Box might be
+ * sufficient over Rc. Where do I have shared ownership???
+ */
+
 type NodeRef<T> = Rc<RefCell<Node<T>>>;
 
 #[derive(Debug)]
@@ -35,16 +49,6 @@ impl BTree<u32> {
         }
     }
 
-    /**
-     * This seems like a LOT of ceremony just to keep track of the left/explode/
-     * right nodes while traversing the tree. I can't just use `Option` b/c it
-     * doesn't implement `Copy` (doesn't work when it's moved into the closure).
-     *
-     * The solution seems to be using RefCells around the options so that I can
-     * mutate the inner values from the callback.
-     *
-     * The other struggle is accessing the values inside the nodes.
-     */
     fn explode(&mut self) -> bool {
         let left_node: RefCell<Option<NodeRef<u32>>> = RefCell::new(None);
         let right_node: RefCell<Option<NodeRef<u32>>> = RefCell::new(None);
