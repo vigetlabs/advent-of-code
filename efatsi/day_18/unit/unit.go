@@ -103,21 +103,19 @@ func (u *Unit) explode() {
   }
 
   // Scan for left digit home
-  foundLeft := false
-  for i := explodingIndex - 1; i > 0 && !foundLeft; i-- {
+  for i := explodingIndex - 1; i > 0; i-- {
     if orderedUnits[i].UnitType == "literal" {
       orderedUnits[i].Value += u.Children[0].Value
-      foundLeft = true
+      break
     }
   }
 
   // Scan for right digit home
   // Start at explodingIndex + 3 to skip the literals within the exploding pair
-  foundRight := false
-  for i := explodingIndex + 3; i < len(orderedUnits) && !foundRight; i++ {
+  for i := explodingIndex + 3; i < len(orderedUnits); i++ {
     if orderedUnits[i].UnitType == "literal" {
       orderedUnits[i].Value += u.Children[1].Value
-      foundRight = true
+      break
     }
   }
 
