@@ -37,11 +37,7 @@ pub struct BTree<T> {
 impl BTree<u32> {
     fn reduce(&mut self) {
         loop {
-            if self.explode() {
-                continue;
-            }
-
-            if self.split() {
+            if self.explode() || self.split() {
                 continue;
             }
 
@@ -55,12 +51,11 @@ impl BTree<u32> {
         let exploding_node: RefCell<Option<NodeRef<u32>>> = RefCell::new(None);
 
         let callback = |node: &NodeRef<u32>, depth| {
-            let mut_node = node.borrow_mut();
             let mut left_node = left_node.borrow_mut();
             let mut right_node = right_node.borrow_mut();
             let mut exploding_node = exploding_node.borrow_mut();
 
-            match &*mut_node {
+            match &*node.borrow_mut() {
                 Node::Leaf(_) => {
                     // if no exploding node, keep track of the last leaf
                     if exploding_node.is_none() {
@@ -80,14 +75,15 @@ impl BTree<u32> {
                 Node::Branch { left, right } => {
                     if exploding_node.is_none()
                         && depth > 4
-                        && matches!(*left.borrow_mut(), Node::Leaf(_))
-                        && matches!(*right.borrow_mut(), Node::Leaf(_))
+                        && matches!(*left.borrow(), Node::Leaf(_))
+                        && matches!(*right.borrow(), Node::Leaf(_))
                     {
                         *exploding_node = Some(node.clone());
                     }
                 }
             }
 
+            // if we found everything we can stop traversing
             left_node.is_some() && exploding_node.is_some() && right_node.is_some()
         };
 
@@ -151,6 +147,7 @@ impl BTree<u32> {
 
                         *splitting_node = Some(node.clone());
 
+                        // if we found the splitting node we can stop traversing
                         return true;
                     }
                 }
