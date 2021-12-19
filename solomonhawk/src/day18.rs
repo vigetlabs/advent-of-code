@@ -31,7 +31,7 @@ pub enum Node<T> {
 
 #[derive(Clone, Debug)]
 pub struct BTree<T> {
-    root: Option<NodeRef<T>>,
+    root: NodeRef<T>,
 }
 
 impl BTree<u32> {
@@ -88,7 +88,7 @@ impl BTree<u32> {
         };
 
         // traverse the tree collecting the relevant nodes
-        traverse(self.root.as_ref().unwrap(), 1, callback);
+        traverse(&self.root, 1, callback);
 
         // if we found an exploding node
         if let Some(e) = exploding_node.borrow().as_ref() {
@@ -158,7 +158,7 @@ impl BTree<u32> {
         };
 
         // traverse the tree collecting the relevant nodes
-        traverse(self.root.as_ref().unwrap(), 1, callback);
+        traverse(&self.root, 1, callback);
 
         let found_splitting_node = splitting_node.borrow().is_some();
         found_splitting_node
@@ -203,7 +203,7 @@ impl FromStr for BTree<u32> {
         }
 
         Ok(BTree {
-            root: Some(Rc::new(RefCell::new(stack.pop().ok_or(error)?))),
+            root: Rc::new(RefCell::new(stack.pop().ok_or(error)?)),
         })
     }
 }
@@ -213,10 +213,10 @@ impl Add for BTree<u32> {
 
     fn add(self, other: Self) -> Self {
         let mut tree = BTree {
-            root: Some(Rc::new(RefCell::new(Node::Branch {
-                left: self.root.unwrap(),
-                right: other.root.unwrap(),
-            }))),
+            root: Rc::new(RefCell::new(Node::Branch {
+                left: self.root,
+                right: other.root,
+            })),
         };
 
         tree.reduce();
@@ -227,10 +227,7 @@ impl Add for BTree<u32> {
 
 impl<T: Display> Display for BTree<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match &self.root {
-            None => write!(f, "[]"),
-            Some(node) => write!(f, "{}", node.borrow()),
-        }
+        write!(f, "{}", &self.root.borrow())
     }
 }
 
@@ -308,7 +305,7 @@ pub fn part2(pairs: &[Vec<BTree<u32>>]) -> usize {
 }
 
 fn magnitude(tree: BTree<u32>) -> usize {
-    node_magnitude(&tree.root.unwrap())
+    node_magnitude(&tree.root)
 }
 
 fn node_magnitude(node: &Rc<RefCell<Node<u32>>>) -> usize {
