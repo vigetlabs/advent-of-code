@@ -222,7 +222,6 @@ func TestSplit(t *testing.T) {
 }
 
 func TestDoubleSplit(t *testing.T) {
-  // Should never get to 22, but this tests recursive splits
   input := "[22,4]"
   expected := "[[[5,6],[5,6]],4]"
   got := reduce(input)

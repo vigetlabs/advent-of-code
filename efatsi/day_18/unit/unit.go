@@ -6,7 +6,7 @@ import (
   "math"
 )
 
-const debug = true
+const debug = false
 
 type Unit struct {
   Depth int
@@ -80,7 +80,10 @@ func (u *Unit) checkExplosion() bool {
 }
 
 func (u *Unit) explode() {
-  if debug { fmt.Println("Exploding", u.ToString()) }
+  if debug {
+    fmt.Println("Exploding", u.ToString())
+    fmt.Println("Before", u.topParent().ToString())
+  }
   orderedUnits := u.topParent().assembleOrderedUnits()
 
   var explodingIndex int
@@ -110,6 +113,11 @@ func (u *Unit) explode() {
   u.UnitType = "literal"
   u.Children = []*Unit{}
   u.Value = 0
+
+  if debug {
+    fmt.Println("After ", u.topParent().ToString())
+    fmt.Println("")
+  }
 }
 
 func (u *Unit) checkSplit() bool {
@@ -130,14 +138,23 @@ func (u *Unit) checkSplit() bool {
 }
 
 func (u *Unit) split() {
-  if debug { fmt.Println("Splitting", u.ToString()) }
+  if debug {
+    fmt.Println("Splitting", u.ToString())
+    fmt.Println("Before", u.topParent().ToString())
+  }
 
   low := math.Floor(float64(u.Value) / 2.0)
   high := math.Ceil(float64(u.Value) / 2.0)
 
   u.UnitType = "pair"
+  u.Value = 0
   u.AddLiteral(int(low))
   u.AddLiteral(int(high))
+
+  if debug {
+    fmt.Println("After ", u.topParent().ToString())
+    fmt.Println("")
+  }
 }
 
 func (u *Unit) topParent() *Unit {

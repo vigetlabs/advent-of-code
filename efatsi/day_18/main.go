@@ -9,8 +9,9 @@ import (
   "day_18/unit"
 )
 
-const debug = true
-const filename = "example.txt"
+const debug = false
+// const filename = "example.txt"
+const filename = "example_sm.txt"
 
 // const debug = false
 // const filename = "input.txt"
