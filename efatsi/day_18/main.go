@@ -23,6 +23,11 @@ func main() {
   trimmedData := strings.Trim(string(data), "\n ")
   lines := strings.Split(trimmedData, "\n")
 
+  solvePartOne(lines)
+  solvePartTwo(lines)
+}
+
+func solvePartOne(lines []string) {
   number := lines[0]
   for i := 1; i < len(lines); i++ {
     nextNumber := lines[i]
@@ -31,8 +36,28 @@ func main() {
     number = reduce(number)
   }
 
-  fmt.Println("number   ", number)
-  fmt.Println("magnitude", magnitude(number))
+  // fmt.Println("number   ", number)
+  fmt.Println("Part 1", magnitude(number))
+}
+
+func solvePartTwo(lines []string) {
+  maxMagnitude := 0
+
+  for i := 0; i < len(lines); i++ {
+    for j := 0; j < len(lines); j++ {
+      if i == j { continue }
+
+      number := reduce(sum(lines[i], lines[j]))
+      magnitude := magnitude(number)
+
+      if magnitude > maxMagnitude {
+        maxMagnitude = magnitude
+      }
+    }
+  }
+
+  // fmt.Println("number   ", number)
+  fmt.Println("Part 2", maxMagnitude)
 }
 
 func sum(n1 string, n2 string) string {
