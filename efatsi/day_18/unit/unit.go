@@ -54,6 +54,9 @@ func (u *Unit) Reduce() *Unit {
     if child.checkExplosion() {
       return u.Reduce()
     }
+  }
+
+  for _, child := range u.Children {
     if child.checkSplit() {
       return u.Reduce()
     }
