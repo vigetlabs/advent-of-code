@@ -59,13 +59,13 @@ impl BTree<u32> {
                 Node::Leaf(_) => {
                     // if no exploding node, keep track of the last leaf
                     if exploding_node.is_none() {
-                        *left_node = Some(node.clone())
+                        *left_node = Some(Rc::clone(node))
                     // if no right node and this leaf isn't part of the exploding node
                     } else if right_node.is_none() {
                         match &*exploding_node.as_ref().unwrap().borrow() {
                             Node::Branch { left, right } => {
                                 if !Rc::ptr_eq(left, node) && !Rc::ptr_eq(right, node) {
-                                    *right_node = Some(node.clone())
+                                    *right_node = Some(Rc::clone(node))
                                 }
                             }
                             _ => (),
@@ -78,7 +78,7 @@ impl BTree<u32> {
                         && matches!(*left.borrow(), Node::Leaf(_))
                         && matches!(*right.borrow(), Node::Leaf(_))
                     {
-                        *exploding_node = Some(node.clone());
+                        *exploding_node = Some(Rc::clone(node));
                     }
                 }
             }
@@ -145,7 +145,7 @@ impl BTree<u32> {
                             right: Rc::new(RefCell::new(Node::Leaf(new_right))),
                         };
 
-                        *splitting_node = Some(node.clone());
+                        *splitting_node = Some(Rc::clone(node));
 
                         // if we found the splitting node we can stop traversing
                         return true;
