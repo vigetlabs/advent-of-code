@@ -13,7 +13,7 @@ func TestCalculateFuel(t *testing.T) {
   for i, expected := range expecteds {
     input := inputs[i]
 
-    check(t, calculateFuel(input, target), expected)
+    check(t, expected, calculateFuel(input, target))
   }
 }
 
@@ -25,7 +25,7 @@ func TestCalculateExpensiveFuel(t *testing.T) {
   for i, expected := range expecteds {
     input := inputs[i]
 
-    check(t, calculateExpensiveFuel(input, target), expected)
+    check(t, expected, calculateExpensiveFuel(input, target))
   }
 }
 
@@ -36,11 +36,11 @@ func TestNthTriangle(t *testing.T) {
     input := pair[0]
     expected := pair[1]
 
-    check(t, nthTriangle(input), expected)
+    check(t, expected, nthTriangle(input))
   }
 }
 
-func check(t *testing.T, got int, expected int) {
+func check(t *testing.T, expected int, got int) {
   if (expected != got) {
     t.Errorf("Fail! Expected %d, got %d", expected, got)
   }
