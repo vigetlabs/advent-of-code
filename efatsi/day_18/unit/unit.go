@@ -49,6 +49,14 @@ func (u *Unit) AddLiteral(value int) *Unit {
 
 // -- Instance Methods --
 
+func (u *Unit) Magnitude() int {
+  if u.UnitType == "pair" {
+    return (3 * u.Children[0].Magnitude()) + (2 * u.Children[1].Magnitude())
+  } else {
+    return u.Value
+  }
+}
+
 func (u *Unit) Reduce() *Unit {
   for _, child := range u.Children {
     if child.checkExplosion() {

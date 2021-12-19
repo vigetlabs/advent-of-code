@@ -11,10 +11,9 @@ import (
 
 const debug = false
 // const filename = "example.txt"
-const filename = "example_sm.txt"
 
 // const debug = false
-// const filename = "input.txt"
+const filename = "input.txt"
 
 type Unit = unit.Unit
 
@@ -32,7 +31,8 @@ func main() {
     number = reduce(number)
   }
 
-  fmt.Println("number", number)
+  fmt.Println("number   ", number)
+  fmt.Println("magnitude", magnitude(number))
 }
 
 func sum(n1 string, n2 string) string {
@@ -46,6 +46,11 @@ func reduce(number string) string {
   // return newNumber
 
   return newNumber
+}
+
+func magnitude(number string) int {
+  unit := parse(number)
+  return unit.Magnitude()
 }
 
 func parse(number string) Unit {
