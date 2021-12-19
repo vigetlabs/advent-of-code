@@ -3,7 +3,10 @@ package unit
 import (
   "fmt"
   "strconv"
+  "math"
 )
+
+const debug = true
 
 type Unit struct {
   Depth int
@@ -32,12 +35,12 @@ func (u *Unit) AddPair() *Unit {
   return child
 }
 
-func (u *Unit) AddLiteral(Value int) *Unit {
+func (u *Unit) AddLiteral(value int) *Unit {
   child := &Unit {
     UnitType: "literal",
     Depth: u.Depth + 1,
     Parent: u,
-    Value: Value,
+    Value: value,
   }
   u.Children = append(u.Children, child)
 
@@ -47,22 +50,13 @@ func (u *Unit) AddLiteral(Value int) *Unit {
 // -- Instance Methods --
 
 func (u *Unit) Reduce() *Unit {
-  // loop thru unit.Children
-  // - if any should explode
-  //   - explodeChild
-  //   - reduceUnit(unit)
-  // - if any should split
-  //   - splitChild
-  //   - reduceUnit(unit)
-
   for _, child := range u.Children {
     if child.checkExplosion() {
       return u.Reduce()
     }
-    // if child.shouldSplit() {
-    //   child.split()
-    //   return reduceUnit(unit)
-    // }
+    if child.checkSplit() {
+      return u.Reduce()
+    }
   }
 
   return u
@@ -86,6 +80,7 @@ func (u *Unit) checkExplosion() bool {
 }
 
 func (u *Unit) explode() {
+  if debug { fmt.Println("Exploding", u.ToString()) }
   orderedUnits := u.topParent().assembleOrderedUnits()
 
   var explodingIndex int
@@ -115,6 +110,34 @@ func (u *Unit) explode() {
   u.UnitType = "literal"
   u.Children = []*Unit{}
   u.Value = 0
+}
+
+func (u *Unit) checkSplit() bool {
+  if u.UnitType == "literal" {
+    if u.Value >= 10 {
+      u.split()
+      return true
+    }
+  } else {
+    for _, child := range u.Children {
+      if child.checkSplit() {
+        return true
+      }
+    }
+  }
+
+  return false
+}
+
+func (u *Unit) split() {
+  if debug { fmt.Println("Splitting", u.ToString()) }
+
+  low := math.Floor(float64(u.Value) / 2.0)
+  high := math.Ceil(float64(u.Value) / 2.0)
+
+  u.UnitType = "pair"
+  u.AddLiteral(int(low))
+  u.AddLiteral(int(high))
 }
 
 func (u *Unit) topParent() *Unit {

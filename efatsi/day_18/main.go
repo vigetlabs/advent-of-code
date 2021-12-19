@@ -9,7 +9,7 @@ import (
   "day_18/unit"
 )
 
-const debug = false
+const debug = true
 const filename = "example.txt"
 
 // const debug = false

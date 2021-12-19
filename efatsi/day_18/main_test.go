@@ -212,10 +212,33 @@ func TestReduceTwice(t *testing.T) {
   check(t, expected, got)
 }
 
-// ## Explode
-// Split
-// 10: "[5,5]"
-// 11: "[5,6]"
+// ## Split
+func TestSplit(t *testing.T) {
+  input := "[13,4]"
+  expected := "[[6,7],4]"
+  got := reduce(input)
+
+  check(t, expected, got)
+}
+
+func TestDoubleSplit(t *testing.T) {
+  // Should never get to 22, but this tests recursive splits
+  input := "[22,4]"
+  expected := "[[[5,6],[5,6]],4]"
+  got := reduce(input)
+
+  check(t, expected, got)
+}
+
+func TestItAll(t *testing.T) {
+  n1 := "[[[[4,3],4],4],[7,[[8,4],9]]]"
+  n2 := "[1,1]"
+  number := sum(n1, n2)
+  got := reduce(number)
+  expected := "[[[[0,7],4],[[7,8],[6,0]]],[8,1]]"
+
+  check(t, expected, got)
+}
 
 // Explodes & Splits
 // - [[[[[4,3],4],4],[7,[[8,4],9]]],[1,1]]
