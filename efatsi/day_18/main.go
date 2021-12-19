@@ -5,6 +5,8 @@ import (
   "os"
   "strings"
   "strconv"
+
+  "day_18/unit"
 )
 
 const debug = false
@@ -13,13 +15,7 @@ const filename = "example.txt"
 // const debug = false
 // const filename = "input.txt"
 
-type Unit struct {
-  depth int
-  parent *Unit
-  unitType string // "pair" | "number"
-  children [](*Unit)
-  value int
-}
+type Unit = unit.Unit
 
 func main() {
   data, _ := os.ReadFile(filename)
@@ -43,19 +39,16 @@ func sum(n1 string, n2 string) string {
 }
 
 func reduce(number string) string {
-  // unit := parse(number)
-  // unit = reduceUnit(unit)
-  // newNumber := unit.toString()
+  unit := parse(number)
+  unit.Reduce()
+  newNumber := unit.ToString()
   // return newNumber
 
-  return number
+  return newNumber
 }
 
 func parse(number string) Unit {
-  current := &Unit {
-    unitType: "pair",
-    depth: 1,
-  }
+  current := unit.NewBase()
 
   // Time for some recurrrrrrrsiooononnnnnnnnnnn
   cursor := 1 // skip first & last characters
@@ -63,47 +56,26 @@ func parse(number string) Unit {
     char := number[cursor:cursor+1]
 
     if char == "[" {
-      if debug { fmt.Println("parsing", char) }
-
-      child := Unit {
-        unitType: "pair",
-        depth: current.depth + 1,
-        parent: current,
-      }
-      current.children = append(current.children, &child)
-      current = &child // they grow up so fast
-
-    } else if char == "," {
-      if debug { fmt.Println("parsing", char) }
-      // pass
+      child := current.AddPair()
+      current = child // they grow up so fast
 
     } else if isDigit(char) {
       nextChar := number[cursor+1:cursor+2]
-      if isDigit(nextChar) {
-        char = char + nextChar
-      }
-      if debug { fmt.Println("parsing", char) }
+      if isDigit(nextChar) { char = char + nextChar }
 
       value, _ := strconv.Atoi(char)
-      child := Unit {
-        unitType: "literal",
-        depth: current.depth + 1,
-        parent: current,
-        value: value,
-      }
+      current.AddLiteral(value)
 
-      current.children = append(current.children, &child)
     } else if char == "]" {
-      if debug { fmt.Println("parsing", char) }
-
-      current = current.parent
+      current = current.Parent
     }
 
     cursor += len(char)
   }
 
   if debug {
-    current.print()
+    fmt.Println("Parsed Unit:")
+    current.Print()
   }
 
   return *current
@@ -115,25 +87,4 @@ func isDigit(char string) bool {
   }
 
   return false
-}
-
-func (u *Unit) print() {
-  spacing := ""
-  for i := 0; i < u.depth - 1; i++ {
-    spacing += "  "
-  }
-
-  fmt.Println(spacing, "- Unit Type:  ", u.unitType)
-  fmt.Println(spacing, "- Depth:      ", u.depth)
-  if (u.unitType == "literal") {
-    fmt.Println(spacing, "- Value:      ", u.value)
-  } else {
-    fmt.Println(spacing, "- # Children: ", len(u.children))
-  }
-
-  fmt.Println("")
-
-  for _, child := range u.children {
-    child.print()
-  }
 }
