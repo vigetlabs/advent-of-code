@@ -40,6 +40,10 @@ type Distance struct {
   distance float64
 }
 
+// TODO
+// while running over distances, make map of readings involved in matches
+// as soon as there are 11 in both, game over, tally it up, get the offset
+
 func main() {
   data, _ := os.ReadFile(filename)
   trimmedData := strings.Trim(string(data), "\n ")
@@ -68,11 +72,22 @@ func main() {
 }
 
 func attemptTranslationFind(s1 *Sensor, s2 *Sensor) {
-  // Just find pairs of pairs that have the same distance as one another
-  translationCounter := make(map[int]int, 0)
-  for i := 0; i < 24; i++ { translationCounter[i] = 0 }
+  // successMap is dense: A map w/ Reading keys (from s1), which point to
+  //   a map w/ translation index keys and []*Distance values.
+  // Purpose: for each hub node, track how many times a tranaslation function
+  //   succeeded. Once you get to 11, you know there are 12 points who's
+  //   distances from the hub shared the same translation.
+  successMap := make(map[*Reading]map[int][]*Distance, 0)
+
+  fmt.Println("s1.innerDistances", len(s1.innerDistances))
+  fmt.Println("s2.innerDistances", len(s2.innerDistances))
 
   for _, d1 := range s1.innerDistances {
+    _, exists := successMap[d1.r1]
+    if !exists {
+      successMap[d1.r1] = make(map[int][]*Distance, 0)
+    }
+
     for _, d2 := range s2.innerDistances {
       if (d1.distance == d2.distance) {
         for i, translation := range translation.AllTranslations {
@@ -90,14 +105,16 @@ func attemptTranslationFind(s1 *Sensor, s2 *Sensor) {
               fmt.Println("")
             }
 
-            translationCounter[i] += 1
-            // 66 = 11 + 10 + ... + 0
-            // AKA, the number of connections before we know there are 12 points
-            if translationCounter[i] >= 66 {
-              s2.translationsToZero = append([]Translation{translation}, s1.translationsToZero...)
-              return
+            matches, exists := successMap[d1.r1][i]
+            if exists {
+              successMap[d1.r1][i] = append(matches, d2)
+              if len(successMap[d1.r1][i]) == 11 {
+                s2.translationsToZero = append([]Translation{translation}, s1.translationsToZero...)
+                return
+              }
+            } else {
+              successMap[d1.r1][i] = []*Distance{d2}
             }
-
             break
           }
         }
@@ -105,7 +122,8 @@ func attemptTranslationFind(s1 *Sensor, s2 *Sensor) {
     }
   }
 
-  fmt.Println("translationCounter", translationCounter)
+  fmt.Println("Didn't make it")
+  fmt.Println("successMap", successMap)
 }
 
 func loadSensorData(allSensorReadings []string) []*Sensor {
