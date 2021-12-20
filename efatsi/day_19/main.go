@@ -13,6 +13,7 @@ import (
 const debug = true
 // const debug = false
 
+// const filename = "example_sm.txt"
 const filename = "example.txt"
 // const filename = "input.txt"
 
@@ -59,10 +60,26 @@ func main() {
 
   for _, s := range sensors {
     fmt.Println(s.name)
-    fmt.Println(s.translationsToBase)
+    fmt.Println(s.translate(1, 2, 3))
     fmt.Println(s.offsetToBase)
     fmt.Println("")
   }
+
+  finalReadings := sensors[0].readings
+  for _, sensor := range sensors[1:] {
+    fmt.Println("Translating readings from", sensor.name)
+
+    for _, reading := range sensor.readings {
+      translatedReading := sensor.translateToBase(reading)
+
+      if !contains(finalReadings, translatedReading) {
+        fmt.Println("Found a new one:", translatedReading.toString())
+        finalReadings = append(finalReadings, &translatedReading)
+      }
+    }
+  }
+
+  fmt.Println("Part 1", len(finalReadings))
 }
 
 func findTranslations(sensors []*Sensor) {
@@ -147,7 +164,7 @@ func attemptTranslationFind(s1 *Sensor, s2 *Sensor) {
               successMap[d1.r1][i] = append(matches, d2)
               if len(successMap[d1.r1][i]) == 11 {
                 s2.translationsToBase = append([]Translation{translation}, s1.translationsToBase...)
-                s2.offsetToBase = calculateOffsetToBase(translation, s1.offsetToBase, d1.r1, successMap[d1.r1][i])
+                s2.offsetToBase = calculateOffsetToBase(translation, s1, s1.offsetToBase, d1.r1, successMap[d1.r1][i])
                 return
               }
             } else {
@@ -166,7 +183,7 @@ func attemptTranslationFind(s1 *Sensor, s2 *Sensor) {
   }
 }
 
-func calculateOffsetToBase(translation Translation, s1Offset [3]int, s1Hub *Reading, s2Distances []*Distance) [3]int {
+func calculateOffsetToBase(translation Translation, s1 *Sensor, s1Offset [3]int, s1Hub *Reading, s2Distances []*Distance) [3]int {
   var s2Hub *Reading
   // Check first pair of pairs, find common, that should be the hub of s2
   r11 := s2Distances[0].r1
@@ -188,11 +205,16 @@ func calculateOffsetToBase(translation Translation, s1Offset [3]int, s1Hub *Read
     }
   }
 
+  // TODO: NEEDS MORE MATH
   x, y, z := translation(s2Hub.coordinates())
+  // need to translate s1Offset in s1 terms, don't ask me why
+  offsetX, offsetY, offsetZ := s1.translate(s1Offset[0], s1Offset[1], s1Offset[2])
+  // then need to translate this in s1 terms, really don't ask me why
+  finalx, finalY, finalZ := s1.translate(offsetX + s1Hub.x - x, offsetY + s1Hub.y - y, offsetZ + s1Hub.z - z)
   offset := [3]int{
-    s1Offset[0] + s1Hub.x - x,
-    s1Offset[1] + s1Hub.y - y,
-    s1Offset[2] + s1Hub.z - z,
+    finalx,
+    finalY,
+    finalZ,
   }
 
   if debug {
@@ -247,7 +269,13 @@ func (s *Sensor) calculateDistances() {
   }
 }
 
-func contains(readings []*Reading, reading Reading) bool {
+func contains(readings []*Reading, r Reading) bool {
+  for _, e := range readings {
+    if e.x == r.x && e.y == r.y && e.z == r.z {
+      return true
+    }
+  }
+
   return false
 }
 
@@ -263,6 +291,27 @@ func distanceBetween(r1 *Reading, r2 *Reading) float64 {
 func round(x float64, precision float64) float64 {
   multiplier := math.Pow(10, precision)
   return math.Floor(x * multiplier) / multiplier
+}
+
+func (sensor *Sensor) translate(x int, y int, z int) (int, int, int) {
+  for _, translate := range sensor.translationsToBase {
+    x, y, z = translate(x, y, z)
+  }
+
+  return x, y, z
+}
+
+func (sensor *Sensor) translateToBase(reading *Reading) Reading {
+  x, y, z := sensor.translate(reading.coordinates())
+  offset := sensor.offsetToBase
+
+  translatedReading := Reading {
+    offset[0] + x,
+    offset[1] + y,
+    offset[2] + z,
+  }
+
+  return translatedReading
 }
 
 func (sensor *Sensor) hasTranslation() bool {
