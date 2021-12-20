@@ -5,6 +5,7 @@ import (
   "os"
   "strings"
   "strconv"
+  "math"
 
   "day_19/translation"
 )
@@ -26,8 +27,14 @@ type Reading struct {
 
 type Sensor struct {
   readings []*Reading
-  innerDistances []*DistanceBetween
+  innerDistances []*Distance
   translationsToZero []T
+}
+
+type Distance struct {
+  r1 *Reading
+  r2 *Reading
+  distance float64
 }
 
 func main() {
@@ -36,8 +43,17 @@ func main() {
   allSensorReadings := strings.Split(trimmedData, "\n\n")
 
   sensors := loadSensorData(allSensorReadings)
+  for _, sensor := range sensors {
+    sensor.calculateDistances()
+  }
 
+  fmt.Println("readings:")
   fmt.Println(len(sensors[0].readings))
+  fmt.Println("innerDistances:")
+  for _, d := range sensors[0].innerDistances {
+    fmt.Println(d)
+  }
+  fmt.Println("")
 }
 
 func loadSensorData(allSensorReadings []string) []*Sensor {
@@ -61,4 +77,32 @@ func loadSensorData(allSensorReadings []string) []*Sensor {
   }
 
   return sensors
+}
+
+func (s *Sensor) calculateDistances() {
+  for i := 0; i < len(s.readings) - 1; i++ {
+    for j := i + 1; j < len(s.readings); j++ {
+      distance := Distance {
+        r1: s.readings[i],
+        r2: s.readings[j],
+        distance: distanceBetween(s.readings[i], s.readings[j]),
+      }
+
+      s.innerDistances = append(s.innerDistances, &distance)
+    }
+  }
+}
+
+func distanceBetween(r1 *Reading, r2 *Reading) float64 {
+  dx := float64(r2.x - r1.x)
+  dy := float64(r2.y - r1.y)
+  dz := float64(r2.z - r1.z)
+
+  rawDistance := math.Sqrt(math.Pow(dx, 2) + math.Pow(dy, 2) + math.Pow(dz, 2))
+  return round(rawDistance, 2)
+}
+
+func round(x float64, precision float64) float64 {
+  multiplier := math.Pow(10, precision)
+  return math.Floor(x * multiplier) / multiplier
 }
