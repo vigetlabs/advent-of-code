@@ -13,8 +13,7 @@ import (
 const debug = true
 // const debug = false
 
-const filename = "example_sm.txt"
-// const filename = "example.txt"
+const filename = "example.txt"
 // const filename = "input.txt"
 
 type Translation = translation.Translation
@@ -26,10 +25,11 @@ type Reading struct {
 }
 
 type Sensor struct {
+  name string
   readings []*Reading
   innerDistances []*Distance
-  translationsToZero []Translation
-  offsetToZero [3]int
+  translationsToBase []Translation
+  offsetToBase [3]int
 }
 
 type Distance struct {
@@ -40,9 +40,6 @@ type Distance struct {
   dz int
   distance float64
 }
-
-// TODO
-// ripple out translations/offsets
 
 func main() {
   data, _ := os.ReadFile(filename)
@@ -56,20 +53,63 @@ func main() {
 
   // Hardcode the first sensor's translation & offsets.
   // Others will lean on these to build their own translation chain / offsets
-  sensors[0].translationsToZero = []Translation{translation.Translate1}
-  sensors[0].offsetToZero = [3]int{0, 0, 0}
-  for i := 0; i < len(sensors) - 1; i++ {
-    for j := i + 1; j < len(sensors); j++ {
-      s1 := sensors[i]
-      s2 := sensors[j]
+  sensors[0].translationsToBase = []Translation{translation.Translate1}
+  sensors[0].offsetToBase = [3]int{0, 0, 0}
+  findTranslations(sensors)
 
-      attemptTranslationFind(s1, s2)
-      if len(s2.translationsToZero) >= 1 {
-        fmt.Println("Found Translation For", i, s1.translationsToZero)
-        fmt.Println("Found Translation For", j, s2.translationsToZero)
+  for _, s := range sensors {
+    fmt.Println(s.name)
+    fmt.Println(s.translationsToBase)
+    fmt.Println(s.offsetToBase)
+    fmt.Println("")
+  }
+}
+
+func findTranslations(sensors []*Sensor) {
+  // recurse until we have no more missing translations
+  hasTranslations, missingTranslations := splitOnTranslations(sensors)
+
+  if (len(missingTranslations) > 0) {
+    if debug {
+      fmt.Println("hasTranslations    ", hasTranslations)
+      fmt.Println("missingTranslations", missingTranslations)
+      fmt.Println("")
+    }
+
+    for _, baseSensor := range hasTranslations {
+      for _, nextSensor := range missingTranslations {
+        if debug { fmt.Println("Attempting translation w/", []*Sensor{baseSensor}, "->", []*Sensor{nextSensor}) }
+        attemptTranslationFind(baseSensor, nextSensor)
+
+        if nextSensor.hasTranslation() {
+          hasTranslations = append(hasTranslations, nextSensor)
+
+          if debug {
+            fmt.Println("Base Translation", baseSensor.translationsToBase)
+            fmt.Println("Next Translation", nextSensor.translationsToBase)
+          }
+        }
       }
     }
+
+    findTranslations(sensors)
   }
+}
+
+func splitOnTranslations(sensors []*Sensor) ([]*Sensor, []*Sensor) {
+  // recalculate missings
+  hasTranslations := make([]*Sensor, 0)
+  missingTranslations := make([]*Sensor, 0)
+
+  for _, s := range sensors {
+    if s.hasTranslation() {
+      hasTranslations = append(hasTranslations, s)
+    } else {
+      missingTranslations = append(missingTranslations, s)
+    }
+  }
+
+  return hasTranslations, missingTranslations
 }
 
 func attemptTranslationFind(s1 *Sensor, s2 *Sensor) {
@@ -79,9 +119,6 @@ func attemptTranslationFind(s1 *Sensor, s2 *Sensor) {
   //   succeeded. Once you get to 11, you know there are 12 points who's
   //   distances from the hub shared the same translation.
   successMap := make(map[*Reading]map[int][]*Distance, 0)
-
-  fmt.Println("s1.innerDistances", len(s1.innerDistances))
-  fmt.Println("s2.innerDistances", len(s2.innerDistances))
 
   for _, d1 := range s1.innerDistances {
     _, exists := successMap[d1.r1]
@@ -109,8 +146,8 @@ func attemptTranslationFind(s1 *Sensor, s2 *Sensor) {
             if exists {
               successMap[d1.r1][i] = append(matches, d2)
               if len(successMap[d1.r1][i]) == 11 {
-                s2.translationsToZero = append([]Translation{translation}, s1.translationsToZero...)
-                s2.offsetToZero = calculateOffsetToZero(translation, s1.offsetToZero, d1.r1, successMap[d1.r1][i])
+                s2.translationsToBase = append([]Translation{translation}, s1.translationsToBase...)
+                s2.offsetToBase = calculateOffsetToBase(translation, s1.offsetToBase, d1.r1, successMap[d1.r1][i])
                 return
               }
             } else {
@@ -123,11 +160,13 @@ func attemptTranslationFind(s1 *Sensor, s2 *Sensor) {
     }
   }
 
-  fmt.Println("Didn't make it")
-  fmt.Println("successMap", successMap)
+  if debug {
+    fmt.Println("Didn't find one")
+    fmt.Println("")
+  }
 }
 
-func calculateOffsetToZero(translation Translation, s1Offset [3]int, s1Hub *Reading, s2Distances []*Distance) [3]int {
+func calculateOffsetToBase(translation Translation, s1Offset [3]int, s1Hub *Reading, s2Distances []*Distance) [3]int {
   var s2Hub *Reading
   // Check first pair of pairs, find common, that should be the hub of s2
   r11 := s2Distances[0].r1
@@ -149,7 +188,7 @@ func calculateOffsetToZero(translation Translation, s1Offset [3]int, s1Hub *Read
     }
   }
 
-  x, y, z := translation(s2Hub.x, s2Hub.y, s2Hub.z)
+  x, y, z := translation(s2Hub.coordinates())
   offset := [3]int{
     s1Offset[0] + s1Hub.x - x,
     s1Offset[1] + s1Hub.y - y,
@@ -173,7 +212,7 @@ func loadSensorData(allSensorReadings []string) []*Sensor {
     sensors = append(sensors, &sensor)
 
     readings := strings.Split(sensorReadings, "\n")
-    // skip first line: --- scanner \d ---
+    sensor.name = readings[0]
     for i := 1; i < len(readings); i++ {
       coords := strings.Split(readings[i], ",")
       x, _ := strconv.Atoi(coords[0])
@@ -208,6 +247,10 @@ func (s *Sensor) calculateDistances() {
   }
 }
 
+func contains(readings []*Reading, reading Reading) bool {
+  return false
+}
+
 func distanceBetween(r1 *Reading, r2 *Reading) float64 {
   dx := float64(r2.x - r1.x)
   dy := float64(r2.y - r1.y)
@@ -222,10 +265,18 @@ func round(x float64, precision float64) float64 {
   return math.Floor(x * multiplier) / multiplier
 }
 
+func (sensor *Sensor) hasTranslation() bool {
+  return len(sensor.translationsToBase) >= 1
+}
+
 func (d *Distance) toString() string {
   return d.r1.toString() + " -> " + d.r2.toString()
 }
 
 func (r *Reading) toString() string {
   return strconv.Itoa(r.x) + "," + strconv.Itoa(r.y) + "," + strconv.Itoa(r.z)
+}
+
+func (r *Reading) coordinates() (int, int, int) {
+  return r.x, r.y, r.z
 }
