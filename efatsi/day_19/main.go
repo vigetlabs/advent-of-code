@@ -10,8 +10,8 @@ import (
   "day_19/translation"
 )
 
-const debug = true
-// const debug = false
+// const debug = true
+const debug = false
 
 // const filename = "example_sm.txt"
 // const filename = "example.txt"
@@ -58,28 +58,66 @@ func main() {
   sensors[0].offsetToBase = [3]int{0, 0, 0}
   findTranslations(sensors)
 
-  for _, s := range sensors {
-    fmt.Println(s.name)
-    fmt.Println(s.translate(1, 2, 3))
-    fmt.Println(s.offsetToBase)
-    fmt.Println("")
+  if debug {
+    for _, s := range sensors {
+      fmt.Println(s.name)
+      fmt.Println(s.translate(1, 2, 3))
+      fmt.Println(s.offsetToBase)
+      fmt.Println("")
+    }
   }
 
+  solvePartOne(sensors)
+  solvePartTwo(sensors)
+}
+
+func solvePartOne(sensors []*Sensor) {
   finalReadings := sensors[0].readings
   for _, sensor := range sensors[1:] {
-    fmt.Println("Translating readings from", sensor.name)
+    if debug { fmt.Println("Translating readings from", sensor.name) }
 
     for _, reading := range sensor.readings {
       translatedReading := sensor.translateToBase(reading)
 
       if !contains(finalReadings, translatedReading) {
-        fmt.Println("Found a new one:", translatedReading.toString())
+        if debug { fmt.Println("Found a new one:", translatedReading.toString()) }
         finalReadings = append(finalReadings, &translatedReading)
       }
     }
   }
 
   fmt.Println("Part 1", len(finalReadings))
+}
+
+func solvePartTwo(sensors []*Sensor) {
+  maxDistance := 0
+
+  for i := 0; i < len(sensors); i++ {
+    o1 := sensors[i].offsetToBase
+
+    for j := 0; j < len(sensors); j++ {
+      if i == j { continue }
+
+      o2 := sensors[j].offsetToBase
+
+      manhanttanDistance := abs(o1[0] - o2[0]) + abs(o1[1] - o2[1]) + abs(o1[2] - o2[2])
+      if manhanttanDistance > maxDistance {
+        if (debug) {
+          fmt.Println("Found new max:")
+          fmt.Println(o1)
+          fmt.Println(o2)
+          fmt.Println((o1[0] - o2[0]), (o1[1] - o2[1]), (o1[2] - o2[2]))
+          fmt.Println(manhanttanDistance)
+          fmt.Println("")
+        }
+
+        maxDistance = manhanttanDistance
+      }
+
+    }
+  }
+
+  fmt.Println("Part 2", maxDistance)
 }
 
 func findTranslations(sensors []*Sensor) {
@@ -326,4 +364,12 @@ func (r *Reading) toString() string {
 
 func (r *Reading) coordinates() (int, int, int) {
   return r.x, r.y, r.z
+}
+
+func abs(x int) int {
+  if x >= 0 {
+    return x
+  } else {
+    return x * -1
+  }
 }
