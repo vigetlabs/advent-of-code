@@ -14,8 +14,8 @@ const debug = true
 // const debug = false
 
 // const filename = "example_sm.txt"
-const filename = "example.txt"
-// const filename = "input.txt"
+// const filename = "example.txt"
+const filename = "input.txt"
 
 type Translation = translation.Translation
 
@@ -164,7 +164,7 @@ func attemptTranslationFind(s1 *Sensor, s2 *Sensor) {
               successMap[d1.r1][i] = append(matches, d2)
               if len(successMap[d1.r1][i]) == 11 {
                 s2.translationsToBase = append([]Translation{translation}, s1.translationsToBase...)
-                s2.offsetToBase = calculateOffsetToBase(translation, s1, s1.offsetToBase, d1.r1, successMap[d1.r1][i])
+                s2.offsetToBase = calculateOffsetToBase(s1, s2, d1.r1, successMap[d1.r1][i])
                 return
               }
             } else {
@@ -183,7 +183,7 @@ func attemptTranslationFind(s1 *Sensor, s2 *Sensor) {
   }
 }
 
-func calculateOffsetToBase(translation Translation, s1 *Sensor, s1Offset [3]int, s1Hub *Reading, s2Distances []*Distance) [3]int {
+func calculateOffsetToBase(s1 *Sensor, s2 *Sensor, s1Hub *Reading, s2Distances []*Distance) [3]int {
   var s2Hub *Reading
   // Check first pair of pairs, find common, that should be the hub of s2
   r11 := s2Distances[0].r1
@@ -205,21 +205,19 @@ func calculateOffsetToBase(translation Translation, s1 *Sensor, s1Offset [3]int,
     }
   }
 
-  // TODO: NEEDS MORE MATH
-  x, y, z := translation(s2Hub.coordinates())
-  // need to translate s1Offset in s1 terms, don't ask me why
-  offsetX, offsetY, offsetZ := s1.translate(s1Offset[0], s1Offset[1], s1Offset[2])
-  // then need to translate this in s1 terms, really don't ask me why
-  finalx, finalY, finalZ := s1.translate(offsetX + s1Hub.x - x, offsetY + s1Hub.y - y, offsetZ + s1Hub.z - z)
+  // This took for goddamn ever
+  x1, y1, z1 := s1.translate(s1Hub.coordinates())
+  x2, y2, z2 := s2.translate(s2Hub.coordinates())
   offset := [3]int{
-    finalx,
-    finalY,
-    finalZ,
+    s1.offsetToBase[0] + x1 - x2,
+    s1.offsetToBase[1] + y1 - y2,
+    s1.offsetToBase[2] + z1 - z2,
   }
 
   if debug {
-    fmt.Println("s1Hub: ", s1Hub.toString())
-    fmt.Println("s2Hub: ", s2Hub.toString())
+    fmt.Println("s1Hub:    ", s1Hub.toString())
+    fmt.Println("s2Hub:    ", s2Hub.toString())
+    fmt.Println("s1Offset: ", s1.offsetToBase)
     fmt.Println("Offset:", offset)
   }
 
