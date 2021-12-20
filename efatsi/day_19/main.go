@@ -29,6 +29,7 @@ type Sensor struct {
   readings []*Reading
   innerDistances []*Distance
   translationsToZero []Translation
+  offsetToZero [3]int
 }
 
 type Distance struct {
@@ -41,8 +42,7 @@ type Distance struct {
 }
 
 // TODO
-// while running over distances, make map of readings involved in matches
-// as soon as there are 11 in both, game over, tally it up, get the offset
+// ripple out translations/offsets
 
 func main() {
   data, _ := os.ReadFile(filename)
@@ -54,9 +54,10 @@ func main() {
     sensor.calculateDistances()
   }
 
-  // Hardcode the first sensor's translation to the no-op transform
-  // Others will lean on this to build their translation chain
+  // Hardcode the first sensor's translation & offsets.
+  // Others will lean on these to build their own translation chain / offsets
   sensors[0].translationsToZero = []Translation{translation.Translate1}
+  sensors[0].offsetToZero = [3]int{0, 0, 0}
   for i := 0; i < len(sensors) - 1; i++ {
     for j := i + 1; j < len(sensors); j++ {
       s1 := sensors[i]
@@ -91,7 +92,6 @@ func attemptTranslationFind(s1 *Sensor, s2 *Sensor) {
     for _, d2 := range s2.innerDistances {
       if (d1.distance == d2.distance) {
         for i, translation := range translation.AllTranslations {
-          // check if distance between s2 points is translatable to s1 points
           tx, ty, tz := translation(d2.dx, d2.dy, d2.dz)
           straightMatch := (tx == d1.dx && ty == d1.dy && tz == d1.dz)
           reverseMatch := (-tx == d1.dx && -ty == d1.dy && -tz == d1.dz)
@@ -100,8 +100,8 @@ func attemptTranslationFind(s1 *Sensor, s2 *Sensor) {
             if debug {
               x, y, z := translation(1,2,3)
               fmt.Println("Got one", x, y, z)
-              fmt.Println("d1", d1.r1.toString(), "-" + d1.r2.toString())
-              fmt.Println("d2", d2.r1.toString(), "-" + d2.r2.toString())
+              fmt.Println("d1", d1.toString())
+              fmt.Println("d2", d2.toString())
               fmt.Println("")
             }
 
@@ -110,6 +110,7 @@ func attemptTranslationFind(s1 *Sensor, s2 *Sensor) {
               successMap[d1.r1][i] = append(matches, d2)
               if len(successMap[d1.r1][i]) == 11 {
                 s2.translationsToZero = append([]Translation{translation}, s1.translationsToZero...)
+                s2.offsetToZero = calculateOffsetToZero(translation, s1.offsetToZero, d1.r1, successMap[d1.r1][i])
                 return
               }
             } else {
@@ -124,6 +125,44 @@ func attemptTranslationFind(s1 *Sensor, s2 *Sensor) {
 
   fmt.Println("Didn't make it")
   fmt.Println("successMap", successMap)
+}
+
+func calculateOffsetToZero(translation Translation, s1Offset [3]int, s1Hub *Reading, s2Distances []*Distance) [3]int {
+  var s2Hub *Reading
+  // Check first pair of pairs, find common, that should be the hub of s2
+  r11 := s2Distances[0].r1
+  r12 := s2Distances[0].r2
+
+  r21 := s2Distances[1].r1
+  r22 := s2Distances[1].r2
+
+  if r11 == r21 { s2Hub = r11 }
+  if r11 == r22 { s2Hub = r11 }
+  if r12 == r21 { s2Hub = r12 }
+  if r12 == r22 { s2Hub = r12 }
+
+  // Make sure hub is in every one (skip the first two)
+  for _, d := range s2Distances[2:] {
+    if s2Hub == nil { panic("missing hub!") }
+    if (s2Hub != d.r1 && s2Hub != d.r2) {
+      panic("missing incomplete hub!")
+    }
+  }
+
+  x, y, z := translation(s2Hub.x, s2Hub.y, s2Hub.z)
+  offset := [3]int{
+    s1Offset[0] + s1Hub.x - x,
+    s1Offset[1] + s1Hub.y - y,
+    s1Offset[2] + s1Hub.z - z,
+  }
+
+  if debug {
+    fmt.Println("s1Hub: ", s1Hub.toString())
+    fmt.Println("s2Hub: ", s2Hub.toString())
+    fmt.Println("Offset:", offset)
+  }
+
+  return offset
 }
 
 func loadSensorData(allSensorReadings []string) []*Sensor {
@@ -181,6 +220,10 @@ func distanceBetween(r1 *Reading, r2 *Reading) float64 {
 func round(x float64, precision float64) float64 {
   multiplier := math.Pow(10, precision)
   return math.Floor(x * multiplier) / multiplier
+}
+
+func (d *Distance) toString() string {
+  return d.r1.toString() + " -> " + d.r2.toString()
 }
 
 func (r *Reading) toString() string {
