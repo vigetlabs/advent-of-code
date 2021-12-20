@@ -17,7 +17,7 @@ const filename = "example_sm.txt"
 // const filename = "example.txt"
 // const filename = "input.txt"
 
-type T = translation.Translation
+type Translation = translation.Translation
 
 type Reading struct {
   x int
@@ -28,12 +28,15 @@ type Reading struct {
 type Sensor struct {
   readings []*Reading
   innerDistances []*Distance
-  translationsToZero []T
+  translationsToZero []Translation
 }
 
 type Distance struct {
   r1 *Reading
   r2 *Reading
+  dx int
+  dy int
+  dz int
   distance float64
 }
 
@@ -47,13 +50,62 @@ func main() {
     sensor.calculateDistances()
   }
 
-  fmt.Println("readings:")
-  fmt.Println(len(sensors[0].readings))
-  fmt.Println("innerDistances:")
-  for _, d := range sensors[0].innerDistances {
-    fmt.Println(d)
+  // Hardcode the first sensor's translation to the no-op transform
+  // Others will lean on this to build their translation chain
+  sensors[0].translationsToZero = []Translation{translation.Translate1}
+  for i := 0; i < len(sensors) - 1; i++ {
+    for j := i + 1; j < len(sensors); j++ {
+      s1 := sensors[i]
+      s2 := sensors[j]
+
+      attemptTranslationFind(s1, s2)
+      if len(s2.translationsToZero) >= 1 {
+        fmt.Println("Found Translation For", i, s1.translationsToZero)
+        fmt.Println("Found Translation For", j, s2.translationsToZero)
+      }
+    }
   }
-  fmt.Println("")
+}
+
+func attemptTranslationFind(s1 *Sensor, s2 *Sensor) {
+  // Just find pairs of pairs that have the same distance as one another
+  translationCounter := make(map[int]int, 0)
+  for i := 0; i < 24; i++ { translationCounter[i] = 0 }
+
+  for _, d1 := range s1.innerDistances {
+    for _, d2 := range s2.innerDistances {
+      if (d1.distance == d2.distance) {
+        for i, translation := range translation.AllTranslations {
+          // check if distance between s2 points is translatable to s1 points
+          tx, ty, tz := translation(d2.dx, d2.dy, d2.dz)
+          straightMatch := (tx == d1.dx && ty == d1.dy && tz == d1.dz)
+          reverseMatch := (-tx == d1.dx && -ty == d1.dy && -tz == d1.dz)
+
+          if (straightMatch || reverseMatch) {
+            if debug {
+              x, y, z := translation(1,2,3)
+              fmt.Println("Got one", x, y, z)
+              fmt.Println("d1", d1.r1.toString(), "-" + d1.r2.toString())
+              fmt.Println("d2", d2.r1.toString(), "-" + d2.r2.toString())
+              fmt.Println("")
+            }
+
+            translationCounter[i] += 1
+            // 66 = 11 + 10 + ... + 0
+            // AKA, the number of connections before we know there are 12 points
+            if translationCounter[i] >= 66 {
+              s2.translationsToZero = append([]Translation{translation}, s1.translationsToZero...)
+              return
+            }
+
+            break
+          }
+        }
+      }
+    }
+  }
+
+  fmt.Println("translationCounter", translationCounter)
 }
 
 func loadSensorData(allSensorReadings []string) []*Sensor {
@@ -82,9 +134,15 @@ func loadSensorData(allSensorReadings []string) []*Sensor {
 func (s *Sensor) calculateDistances() {
   for i := 0; i < len(s.readings) - 1; i++ {
     for j := i + 1; j < len(s.readings); j++ {
+      r1 := s.readings[i]
+      r2 := s.readings[j]
+
       distance := Distance {
-        r1: s.readings[i],
-        r2: s.readings[j],
+        r1: r1,
+        r2: r2,
+        dx: r2.x - r1.x,
+        dy: r2.y - r1.y,
+        dz: r2.z - r1.z,
         distance: distanceBetween(s.readings[i], s.readings[j]),
       }
 
@@ -105,4 +163,8 @@ func distanceBetween(r1 *Reading, r2 *Reading) float64 {
 func round(x float64, precision float64) float64 {
   multiplier := math.Pow(10, precision)
   return math.Floor(x * multiplier) / multiplier
+}
+
+func (r *Reading) toString() string {
+  return strconv.Itoa(r.x) + "," + strconv.Itoa(r.y) + "," + strconv.Itoa(r.z)
 }

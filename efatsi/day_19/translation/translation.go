@@ -2,6 +2,33 @@ package translation
 
 type Translation = func(int, int, int) (int, int, int)
 
+var AllTranslations = [24]Translation{
+  Translate1,
+  Translate2,
+  Translate3,
+  Translate4,
+  Translate5,
+  Translate6,
+  Translate7,
+  Translate8,
+  Translate9,
+  Translate10,
+  Translate11,
+  Translate12,
+  Translate13,
+  Translate14,
+  Translate15,
+  Translate16,
+  Translate17,
+  Translate18,
+  Translate19,
+  Translate20,
+  Translate21,
+  Translate22,
+  Translate23,
+  Translate24,
+}
+
 // Facing x
 func Translate1(x int, y int, z int) (int, int, int) {
   return x, y, z
