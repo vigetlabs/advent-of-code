@@ -10,10 +10,10 @@ import (
 type Pic [][]byte
 
 const debug = true
-const filename = "example.txt"
+// const filename = "example.txt"
 
 // const debug = false
-// const filename = "input.txt"
+const filename = "input.txt"
 
 // Image Enhance Algorithm
 var key string
@@ -32,13 +32,16 @@ func main() {
 }
 
 func solvePartOne(pic Pic) {
+  voidOn := false
+
   for i := 0; i < 2; i++ {
-    pic = enHance(pic)
+    pic = enHance(pic, voidOn)
 
     if debug {
       fmt.Println("Step:", i+1)
       printPic(pic)
     }
+    voidOn = !voidOn
   }
 
   fmt.Println("Part 1", countOn(pic))
@@ -46,9 +49,10 @@ func solvePartOne(pic Pic) {
   // 5224 too high :(
   // 5680 too high :(
   // 4999 too low  :(
+  // 5065 ⭐️
 }
 
-func enHance(pic Pic) Pic {
+func enHance(pic Pic, voidOn bool) Pic {
   newDimension := len(pic) + 2
 
   var newPic Pic
@@ -56,14 +60,14 @@ func enHance(pic Pic) Pic {
     newPic = append(newPic, make([]byte, newDimension))
 
     for y := 0; y < newDimension; y++ {
-      newPic[x][y] = readPixel(pic, x-1, y-1)
+      newPic[x][y] = readPixel(pic, x-1, y-1, voidOn)
     }
   }
 
   return newPic
 }
 
-func readPixel(pic Pic, centerX int, centerY int) byte {
+func readPixel(pic Pic, centerX int, centerY int, voidOn bool) byte {
   dimension := len(pic)
 
   indexStr := ""
@@ -74,10 +78,18 @@ func readPixel(pic Pic, centerX int, centerY int) byte {
 
       withinBounds := (x >= 0 && x < dimension && y >= 0 && y < dimension)
 
-      if withinBounds && pic[x][y] == '#' {
-        indexStr += "1"
+      if withinBounds {
+        if pic[x][y] == '#' {
+          indexStr += "1"
+        } else {
+          indexStr += "0"
+        }
       } else {
-        indexStr += "0"
+        if voidOn {
+          indexStr += "1"
+        } else {
+          indexStr += "0"
+        }
       }
     }
   }
