@@ -28,7 +28,8 @@ func main() {
   startingPic := loadPic(lines[2:])
   if debug { printPic(startingPic) }
 
-  solvePartOne(startingPic)
+  // solvePartOne(startingPic)
+  solvePartTwo(startingPic)
 }
 
 func solvePartOne(pic Pic) {
@@ -45,11 +46,22 @@ func solvePartOne(pic Pic) {
   }
 
   fmt.Println("Part 1", countOn(pic))
-  // Guesses:
-  // 5224 too high :(
-  // 5680 too high :(
-  // 4999 too low  :(
-  // 5065 ⭐️
+}
+
+func solvePartTwo(pic Pic) {
+  voidOn := false
+
+  for i := 0; i < 50; i++ {
+    pic = enHance(pic, voidOn)
+
+    if debug {
+      fmt.Println("Step:", i+1)
+      printPic(pic)
+    }
+    voidOn = !voidOn
+  }
+
+  fmt.Println("Part 2", countOn(pic))
 }
 
 func enHance(pic Pic, voidOn bool) Pic {
