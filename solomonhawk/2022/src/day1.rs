@@ -61,12 +61,8 @@ pub fn input_generator(input: &str) -> Vec<Vec<usize>> {
 pub fn part1(elves: &[Vec<usize>]) -> usize {
     let mut max = 0;
 
-    for (i, elf) in elves.iter().enumerate() {
-        let sum = elf.iter().sum();
-
-        if sum > max {
-            max = sum;
-        }
+    for elf in elves {
+        max = max.max(elf.iter().sum());
     }
 
     max
