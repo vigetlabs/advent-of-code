@@ -68,11 +68,7 @@ pub fn part1(elves: &[Vec<usize>]) -> usize {
 
 #[aoc(day1, part2)]
 pub fn part2(elves: &[Vec<usize>]) -> usize {
-    let mut sorted_sums: Vec<usize> = elves
-        .iter()
-        .map(|elf| elf.iter().sum())
-        .collect::<Vec<usize>>();
-
+    let mut sorted_sums: Vec<usize> = elves.iter().map(|elf| elf.iter().sum()).collect();
     sorted_sums.sort_unstable_by(|a, b| b.cmp(a));
 
     sorted_sums.iter().take(3).sum()
