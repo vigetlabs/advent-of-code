@@ -1,0 +1,8 @@
+aoc:
+  cargo-watch -qc -x aoc
+
+test:
+  cargo-watch -qc -x test
+
+release:
+  cargo build --release
