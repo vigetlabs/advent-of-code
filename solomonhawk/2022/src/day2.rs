@@ -41,9 +41,9 @@ Following the Elf's instructions for the second column, what would your total sc
 
 #[derive(Debug, PartialEq, Eq, Copy, Clone)]
 pub enum Move {
-    Rock = 0,
-    Paper = 1,
-    Scissors = 2,
+    Boulder = 0,
+    Parchment = 1,
+    Shears = 2,
 }
 
 pub enum Outcome {
@@ -94,18 +94,18 @@ pub fn part2(rounds: &[(Move, Move)]) -> usize {
 
 fn decode_move(symbol: char) -> Move {
     match symbol {
-        'A' | 'X' => Move::Rock,
-        'B' | 'Y' => Move::Paper,
-        'C' | 'Z' => Move::Scissors,
+        'A' | 'X' => Move::Boulder,
+        'B' | 'Y' => Move::Parchment,
+        'C' | 'Z' => Move::Shears,
         _ => panic!("Invalid move!"),
     }
 }
 
-fn round_outcome(you: &Move, them: &Move) -> Outcome {
-    match (you, them) {
-        (Move::Rock, Move::Scissors) => Outcome::Win,
-        (Move::Paper, Move::Rock) => Outcome::Win,
-        (Move::Scissors, Move::Paper) => Outcome::Win,
+fn round_outcome(your_move: &Move, their_move: &Move) -> Outcome {
+    match (your_move, their_move) {
+        (Move::Boulder, Move::Shears) => Outcome::Win,
+        (Move::Parchment, Move::Boulder) => Outcome::Win,
+        (Move::Shears, Move::Parchment) => Outcome::Win,
         (a, b) if a == b => Outcome::Draw,
         _ => Outcome::Loss,
     }
@@ -129,17 +129,17 @@ fn strategic_move(moves: (Move, Move)) -> Move {
     let (their_move, encoded_outcome) = moves;
 
     match encoded_outcome {
-        Move::Rock => match their_move {
-            Move::Rock => Move::Scissors,
-            Move::Paper => Move::Rock,
-            Move::Scissors => Move::Paper,
+        Move::Boulder => match their_move {
+            Move::Boulder => Move::Shears,
+            Move::Parchment => Move::Boulder,
+            Move::Shears => Move::Parchment,
         },
-        Move::Scissors => match their_move {
-            Move::Rock => Move::Paper,
-            Move::Paper => Move::Scissors,
-            Move::Scissors => Move::Rock,
+        Move::Shears => match their_move {
+            Move::Boulder => Move::Parchment,
+            Move::Parchment => Move::Shears,
+            Move::Shears => Move::Boulder,
         },
-        Move::Paper => their_move,
+        Move::Parchment => their_move,
     }
 }
 
@@ -150,7 +150,7 @@ mod tests {
     #[test]
     fn input() {
         let input = "A B";
-        assert_eq!(input_generator(input), [(Move::Rock, Move::Paper)]);
+        assert_eq!(input_generator(input), [(Move::Boulder, Move::Parchment)]);
     }
 
     #[test]
