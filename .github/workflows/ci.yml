@@ -1,0 +1,27 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  solomonhawk:
+    if: startsWith(github.ref, 'refs/heads/sfh/')
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: solomonhawk/2022
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+
+      - name: Run build
+        run: cargo build --release --verbose
+
+      - name: Run tests
+        run: cargo test
+
+      - name: Run AoC
+        run: ./target/release/solomonhawk
