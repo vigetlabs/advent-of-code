@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   solomonhawk-build:
-    if: startsWith(github.ref, 'refs/heads/sfh/') || startsWith(github.ref, 'refs/pulls/sfh/')
+    if: startsWith(github.ref, 'refs/heads/sfh/') || startsWith(github.ref, 'refs/pull/sfh/')
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -42,7 +42,7 @@ jobs:
           command: aoc
 
   solomonhawk-test:
-    if: startsWith(github.ref, 'refs/heads/sfh/') || startsWith(github.ref, 'refs/pulls/sfh/')
+    if: startsWith(github.ref, 'refs/heads/sfh/') || startsWith(github.ref, 'refs/pull/sfh/')
     runs-on: ubuntu-latest
     defaults:
       run:
