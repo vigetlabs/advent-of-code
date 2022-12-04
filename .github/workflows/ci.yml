@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  pull_request:
+  # run jobs on merges to main, allowing PR branches to see shared caches
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ startsWith(github.ref, 'refs/pull/') }}
+
+jobs:
+  solomonhawk-build:
+    if: github.ref == 'refs/heads/main' || startsWith(github.head_ref, 'sfh/')
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: solomonhawk/2022
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rust-lang/setup-rust-toolchain@v1.3.4
+
+      - uses: Swatinem/rust-cache@v1
+        with:
+          key: v1 # increment this to bust the cache if needed
+
+      - name: Run build
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --release --manifest-path solomonhawk/2022/Cargo.toml
+
+      - name: Run AoC
+        uses: actions-rs/cargo@v1
+        with:
+          command: run
+          args: --manifest-path solomonhawk/2022/Cargo.toml --release
+
+  solomonhawk-test:
+    if: github.ref == 'refs/heads/main' || startsWith(github.head_ref, 'sfh/')
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: solomonhawk/2022
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rust-lang/setup-rust-toolchain@v1.3.4
+
+      - uses: Swatinem/rust-cache@v1
+        with:
+          key: v1 # increment this to bust the cache if needed
+
+      - uses: taiki-e/install-action@nextest
+
+      - name: Run Tests
+        uses: actions-rs/cargo@v1
+        with:
+          command: nextest
+          args: run --all --manifest-path solomonhawk/2022/Cargo.toml
