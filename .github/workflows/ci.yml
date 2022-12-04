@@ -10,7 +10,7 @@ on:
 
 jobs:
   solomonhawk-build:
-    if: startsWith(github.ref, 'refs/heads/sfh/')
+    if: startsWith(github.ref_name, 'sfh/')
     runs-on: ubuntu-latest
     defaults:
       run:
