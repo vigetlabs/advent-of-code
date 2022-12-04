@@ -58,42 +58,42 @@ Find the item type that corresponds to the badges of each three-Elf group. What 
 
 type Inventory = [u8; 52];
 
-#[derive(Debug, PartialEq, Eq)]
-pub struct Rucksack {
-    left: Inventory,
-    right: Inventory,
-}
+fn parse_inventories(encoded: &str, split: bool) -> Vec<Inventory> {
+    let inventories: Vec<Inventory> = if split {
+        let (a, b) = encoded.split_at(encoded.len() / 2); // 💀
+        vec![parse_items(a), parse_items(b)]
+    } else {
+        vec![parse_items(encoded)]
+    };
 
-impl Rucksack {
-    pub fn new(left: &str, right: &str) -> Self {
-        Rucksack {
-            left: parse_items(left),
-            right: parse_items(right),
-        }
-    }
+    inventories
 }
 
 #[aoc_generator(day3)]
-pub fn input_generator(input: &str) -> Vec<Rucksack> {
-    input
-        .lines()
-        .map(|line| line.split_at(line.len() / 2))
-        .map(|(a, b)| Rucksack::new(a, b))
-        .collect()
+pub fn input_generator(input: &str) -> String {
+    input.to_string() // 🤷
 }
 
 #[aoc(day3, part1)]
-pub fn part1(input: &[Rucksack]) -> usize {
+pub fn part1(input: &str) -> usize {
     input
-        .iter()
-        .filter_map(|r| find_overlap_idx(&r.left, &r.right))
+        .lines()
+        .map(|line| parse_inventories(line, true))
+        .filter_map(|invs| find_badge(&invs))
         .map(|idx| idx + 1)
         .sum()
 }
 
 #[aoc(day3, part2)]
-pub fn part2(input: &[Rucksack]) -> usize {
-    0
+pub fn part2(input: &str) -> usize {
+    input
+        .lines()
+        .flat_map(|line| parse_inventories(line, false))
+        .collect::<Vec<Inventory>>()
+        .chunks(3)
+        .filter_map(|sacks| find_badge(sacks))
+        .map(|idx| idx + 1)
+        .sum()
 }
 
 fn parse_items(input: &str) -> Inventory {
@@ -115,14 +115,32 @@ fn item_to_priority(item: char) -> usize {
     }
 }
 
-fn find_overlap_idx(a: &Inventory, b: &Inventory) -> Option<usize> {
-    if a.len() != b.len() {
-        panic!("Inventories must be the same size!")
-    }
+fn find_badge(invs: &[Inventory]) -> Option<usize> {
+    assert!(
+        invs.len() > 1,
+        "Must have more than 1 inventory to find badge"
+    );
+    let first = invs[0];
 
-    for i in 0..a.len() {
-        if a[i] > 0 && b[i] > 0 {
-            return Some(i);
+    // for each priority
+    for i in 0..first.len() {
+        // if the first inventory has no items at that priority, move on to the next priority
+        if first[i] == 0 {
+            continue;
+        }
+
+        // for each of the rest of the inventories
+        for j in 1..invs.len() {
+            // if this inventory has no items with priority `i`, it can't be the badge
+            if invs[j][i] == 0 {
+                break;
+            }
+
+            // if we've made it here, then we've checked all the `invs` and they all
+            // have an item with priority `i`, so it must be the badge
+            if j == invs.len() - 1 {
+                return Some(i);
+            }
         }
     }
 
@@ -136,7 +154,7 @@ mod tests {
     #[test]
     fn input() {
         let input = "vJrwpWtwJgWrhcsFMMfFFhFp\njqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL\nPmmdzqPrVvPwwTWBwg\nwMqvLMZHhHMvwLHjbvcjnnSBnvTQFn\nttgJtRGJQctTZtZT\nCrZsJsPPZsGzwwsLwLmpwMDw";
-        assert_eq!(input_generator(input).len(), 6);
+        assert_eq!(input_generator(input), input);
     }
 
     #[test]
@@ -148,6 +166,6 @@ mod tests {
     #[test]
     fn sample2() {
         let input = "vJrwpWtwJgWrhcsFMMfFFhFp\njqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL\nPmmdzqPrVvPwwTWBwg\nwMqvLMZHhHMvwLHjbvcjnnSBnvTQFn\nttgJtRGJQctTZtZT\nCrZsJsPPZsGzwwsLwLmpwMDw";
-        assert_eq!(part2(&input_generator(input)), 0);
+        assert_eq!(part2(&input_generator(input)), 70);
     }
 }
