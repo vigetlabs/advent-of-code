@@ -12,6 +12,12 @@ concurrency:
   cancel-in-progress: ${{ startsWith(github.ref, 'refs/pull/') }}
 
 jobs:
+  sanity:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo ${{ github.ref }}
+      - run: echo $GITHUB_REF
+
   solomonhawk-build:
     if: startsWith(github.ref, 'refs/heads/sfh/') || startsWith(github.ref, 'refs/pull/sfh/')
     runs-on: ubuntu-latest
