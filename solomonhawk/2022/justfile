@@ -1,5 +1,5 @@
-aoc:
-  cargo-watch -qc -x aoc
+aoc *FLAGS:
+  cargo-watch -qc -x "aoc {{FLAGS}}"
 
 test:
   cargo-watch -qc -x test
