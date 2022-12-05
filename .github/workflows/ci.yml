@@ -22,10 +22,13 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: actions-rust-lang/setup-rust-toolchain@v1.3.4
+        with:
+          cache: false
 
       - uses: Swatinem/rust-cache@v1
         with:
           key: v1 # increment this to bust the cache if needed
+          working-directory: solomonhawk/2022
 
       - name: Run build
         uses: actions-rs/cargo@v1
@@ -49,10 +52,13 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: actions-rust-lang/setup-rust-toolchain@v1.3.4
+        with:
+          cache: false
 
       - uses: Swatinem/rust-cache@v1
         with:
           key: v1 # increment this to bust the cache if needed
+          working-directory: solomonhawk/2022
 
       - uses: taiki-e/install-action@nextest
 
