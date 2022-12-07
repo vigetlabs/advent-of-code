@@ -11,7 +11,7 @@ pub fn input_generator(input: &str) -> Vec<char> {
 pub fn solve_part1(input: &[char]) ->  i32 {
     let mut i = 0;
 
-    let mut first = '0';
+    let mut first;
     let mut second = '0';
     let mut third = '0';
     let mut fourth = '0';
