@@ -83,10 +83,8 @@ use std::{
 };
 use uuid::Uuid;
 
-// let id = Uuid::new_v4();
-
 #[derive(Debug, Clone)]
-struct File {
+struct FileRecord {
     id: Uuid,
     parent_id: Option<Uuid>,
     name: String,
@@ -94,10 +92,16 @@ struct File {
     size: usize,
 }
 
-impl File {
-    pub fn new(name: String, size: usize, kind: Option<String>, parent_id: Option<Uuid>) -> Self {
-        File {
-            id: Uuid::new_v4(),
+impl FileRecord {
+    pub fn new(
+        id: Uuid,
+        name: String,
+        size: usize,
+        kind: Option<String>,
+        parent_id: Option<Uuid>,
+    ) -> Self {
+        FileRecord {
+            id,
             parent_id,
             name,
             kind,
@@ -106,7 +110,7 @@ impl File {
     }
 }
 
-impl Display for File {
+impl Display for FileRecord {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         if let Some(ext) = &self.kind {
             write!(f, "{}.{} ({}) [{}]", self.name, ext, self.size, self.id)
@@ -117,7 +121,7 @@ impl Display for File {
 }
 
 #[derive(Debug, Clone)]
-pub struct Dir {
+pub struct DirectoryRecord {
     id: Uuid,
     parent_id: Option<Uuid>,
     name: String,
@@ -125,10 +129,10 @@ pub struct Dir {
     files: Vec<Uuid>,
 }
 
-impl Dir {
-    pub fn new(name: &str, parent_id: Option<Uuid>) -> Self {
-        Dir {
-            id: Uuid::new_v4(),
+impl DirectoryRecord {
+    pub fn new(id: Uuid, name: &str, parent_id: Option<Uuid>) -> Self {
+        DirectoryRecord {
+            id,
             parent_id,
             name: name.to_string(),
             dirs: vec![],
@@ -137,56 +141,81 @@ impl Dir {
     }
 
     fn subdir(&self, id: Uuid) -> Option<Uuid> {
-        self.dirs.into_iter().find(|d| d == &id)
+        self.dirs.clone().into_iter().find(|d| d == &id)
     }
 
-    fn add_dir(&mut self, dir: &Dir) {
-        println!("Add dir: {:?}", dir);
-        self.dirs.push(dir.id);
+    fn add_dir(&mut self, dir_id: Uuid) {
+        self.dirs.push(dir_id);
     }
 
-    fn add_file(&mut self, file: &File) {
-        println!("Add file: {}", file);
-        self.files.push(file.id);
+    fn add_file(&mut self, file_id: Uuid) {
+        self.files.push(file_id);
     }
 }
 
-enum Location<'a> {
-    F(&'a File),
-    D(&'a Dir),
+#[derive(Debug)]
+enum Location {
+    File(Uuid, FileRecord),
+    Dir(Uuid, DirectoryRecord),
 }
 
-fn file_size(fs: HashMap<Uuid, Location>, id: &Uuid) -> usize {
+fn loc_id(loc: &Location) -> Uuid {
+    match loc {
+        Location::File(id, _) => *id,
+        Location::Dir(id, _) => *id,
+    }
+}
+
+fn file_size(fs: &HashMap<Uuid, Location>, id: &Uuid) -> usize {
     match fs.get(&id) {
-        Some(Location::D(dir)) => {
+        Some(Location::Dir(_, dir)) => {
             let dirs_size: usize = dir.files.iter().map(|id| file_size(fs, id)).sum();
             let files_size: usize = dir.dirs.iter().map(|id| file_size(fs, id)).sum();
 
             dirs_size + files_size
         }
-        Some(Location::F(file)) => file.size,
+        Some(Location::File(_, file)) => file.size,
         _ => panic!("And I oop"),
     }
 }
 
-struct FileSystem<'a> {
-    locs: HashMap<Uuid, Location<'a>>,
+#[derive(Debug)]
+pub struct FileSystem {
+    cwd: Option<Uuid>,
+    locs: HashMap<Uuid, Location>,
     names: HashMap<String, Uuid>,
 }
 
-impl<'a> FileSystem<'a> {
+impl FileSystem {
     pub fn new() -> Self {
         FileSystem {
+            cwd: None,
             locs: HashMap::new(),
             names: HashMap::new(),
         }
     }
 
-    fn add(&mut self, loc: &Location) {
+    fn cd(&mut self, loc_id: Option<&Uuid>) -> Result<(), ()> {
+        match loc_id {
+            Some(id) => {
+                self.cwd = Some(*id);
+                Ok(())
+            }
+            None => Err(()),
+        }
+    }
+
+    fn add(&mut self, loc: Location) {
         match loc {
-            Location::F(file) => self.locs.insert(file.id, *loc),
-            Location::D(dir) => self.locs.insert(dir.id, *loc),
-        };
+            Location::Dir(id, ref dir) => {
+                self.names.insert(dir.name.to_string(), id);
+                self.locs.insert(loc_id(&loc), loc);
+            }
+            Location::File(id, ref file) => {
+                self.names.insert(file.name.to_string(), id);
+                self.locs.insert(loc_id(&loc), loc);
+            }
+        }
     }
 
     fn get(&self, id: Uuid) -> Option<&Location> {
@@ -207,13 +236,8 @@ impl<'a> FileSystem<'a> {
 }
 
 #[aoc_generator(day7)]
-pub fn input_generator(input: &str) -> Dir {
+pub fn input_generator(input: &str) -> FileSystem {
     let mut fs = FileSystem::new();
-    let root_dir = Dir::new("/", None);
-
-    fs.add(&Location::D(&root_dir));
-
-    let mut cwd = root_dir.id.clone();
 
     for line in input.lines() {
         let mut words = line.split_whitespace().peekable();
@@ -232,17 +256,29 @@ pub fn input_generator(input: &str) -> Dir {
                     match words.next() {
                         Some("..") => {
                             // go up
+                            let curr = fs.get(fs.cwd.unwrap()).expect("Unknown parent location");
+
+                            fs.cd(Some(&loc_id(&curr))).ok();
                         }
                         Some(name) => {
-                            if let Some(Location::D(subdir)) = fs.get_by_name(name.to_string()) {
-                                // dir exists, switch to it
-                                cwd = subdir.id.clone();
-                            } else {
-                                let dir = Dir::new(name, Some(cwd));
+                            // fs.try_cd_by_name(name.to_string()).or_else(|_| {
 
-                                fs.add(&Location::D(&dir));
+                            // })
+                            // help me
+                            match fs.get_by_name(name.to_string()) {
+                                Some(Location::Dir(id, _)) => {
+                                    // fs.cd(Some(id));
+                                    // TODO: change directory without multiple references to fs?
+                                }
+                                Some(Location::File(_, _)) => panic!("Cannot `cd` into a file"),
+                                _ => {
+                                    let id = Uuid::new_v4();
+                                    let dir = DirectoryRecord::new(id, name, fs.cwd);
+                                    let dir_loc = Location::Dir(id, dir);
 
-                                cwd = dir.id.clone();
+                                    fs.add(dir_loc);
+                                    fs.cd(Some(&id)).ok();
+                                }
                             }
                         }
                         None => panic!("Expected directory name to `cd` into"),
@@ -258,6 +294,20 @@ pub fn input_generator(input: &str) -> Dir {
 
         // there's a dir
         if let Some(&"dir") = words.peek() {
+            let _ = words.next();
+
+            if let Some(name) = words.next() {
+                let dir_id = Uuid::new_v4();
+                let dir = DirectoryRecord::new(dir_id, name, fs.cwd);
+                let dir_loc = Location::Dir(dir_id, dir);
+
+                fs.add(dir_loc);
+
+                if let Some(Location::Dir(_, cwd_dir)) = fs.get_mut(fs.cwd.unwrap()) {
+                    cwd_dir.add_dir(dir_id);
+                }
+            }
+
             continue;
         }
 
@@ -277,20 +327,27 @@ pub fn input_generator(input: &str) -> Dir {
                 (full_name.to_string(), None)
             };
 
-            fs.add(&Location::F(&File::new(filename, size, kind, Some(cwd))));
+            let file_id = Uuid::new_v4();
+            let file = FileRecord::new(file_id, filename, size, kind, fs.cwd);
+
+            fs.add(Location::File(file.id, file));
+
+            if let Some(Location::Dir(_, cwd_dir)) = fs.get_mut(fs.cwd.unwrap()) {
+                cwd_dir.add_file(file_id);
+            }
         }
     }
 
-    root_dir
+    fs
 }
 
 #[aoc(day7, part1)]
-pub fn part1(input: &Dir) -> usize {
+pub fn part1(input: &FileSystem) -> usize {
     0
 }
 
 #[aoc(day7, part2)]
-pub fn part2(input: &Dir) -> usize {
+pub fn part2(input: &FileSystem) -> usize {
     0
 }
 
@@ -323,11 +380,10 @@ $ ls
 8033020 d.log
 5626152 d.ext
 7214296 k";
-        let root = input_generator(input);
-
-        assert_eq!(root.dirs.len(), 2);
-        assert_eq!(root.files.len(), 2);
-        assert_eq!(root.file_size(), 48381165);
+        let fs = input_generator(input);
+        println!("{:#?}", fs);
+        assert_eq!(fs.locs.len(), 14);
+        // assert_eq!(root.file_size(), 48381165);
     }
 
     #[test]
