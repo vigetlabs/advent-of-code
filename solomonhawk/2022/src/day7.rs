@@ -75,8 +75,6 @@ To begin, find all of the directories with a total size of at most 100000, then 
 Find all of the directories with a total size of at most 100000. What is the sum of the total sizes of those directories?
 */
 
-// 1. calculate a file size for a directory (size of files + size of subdirectories)
-
 use std::{
     collections::HashMap,
     fmt::{self, Display, Formatter},
@@ -90,6 +88,28 @@ struct FileRecord {
     name: String,
     kind: Option<String>, // eot, jpg, txt
     size: usize,
+}
+
+#[derive(Debug, Clone)]
+pub struct DirectoryRecord {
+    id: Uuid,
+    parent_id: Option<Uuid>,
+    name: String,
+    dirs: Vec<Uuid>,
+    files: Vec<Uuid>,
+}
+
+#[derive(Debug)]
+enum Location {
+    File(Uuid, FileRecord),
+    Dir(Uuid, DirectoryRecord),
+}
+
+#[derive(Debug)]
+pub struct FileSystem {
+    cwd: Option<Uuid>,
+    locs: HashMap<Uuid, Location>,
+    names: HashMap<String, Uuid>,
 }
 
 impl FileRecord {
@@ -120,15 +140,6 @@ impl Display for FileRecord {
     }
 }
 
-#[derive(Debug, Clone)]
-pub struct DirectoryRecord {
-    id: Uuid,
-    parent_id: Option<Uuid>,
-    name: String,
-    dirs: Vec<Uuid>,
-    files: Vec<Uuid>,
-}
-
 impl DirectoryRecord {
     pub fn new(id: Uuid, name: &str, parent_id: Option<Uuid>) -> Self {
         DirectoryRecord {
@@ -153,12 +164,6 @@ impl DirectoryRecord {
     }
 }
 
-#[derive(Debug)]
-enum Location {
-    File(Uuid, FileRecord),
-    Dir(Uuid, DirectoryRecord),
-}
-
 fn loc_id(loc: &Location) -> Uuid {
     match loc {
         Location::File(id, _) => *id,
@@ -166,24 +171,19 @@ fn loc_id(loc: &Location) -> Uuid {
     }
 }
 
-fn file_size(fs: &HashMap<Uuid, Location>, id: &Uuid) -> usize {
-    match fs.get(&id) {
+// fn full_path(fs: &FileSystem, cwd_id: &Uuid, name: &str) -> String {}
+
+pub fn file_size(fs: &FileSystem, id: &Uuid) -> usize {
+    match fs.get(id) {
         Some(Location::Dir(_, dir)) => {
-            let dirs_size: usize = dir.files.iter().map(|id| file_size(fs, id)).sum();
-            let files_size: usize = dir.dirs.iter().map(|id| file_size(fs, id)).sum();
+            let dirs_size: usize = dir.dirs.iter().map(|id| file_size(fs, id)).sum();
+            let files_size: usize = dir.files.iter().map(|id| file_size(fs, id)).sum();
 
             dirs_size + files_size
         }
         Some(Location::File(_, file)) => file.size,
         _ => panic!("And I oop"),
     }
-}
-
-#[derive(Debug)]
-pub struct FileSystem {
-    cwd: Option<Uuid>,
-    locs: HashMap<Uuid, Location>,
-    names: HashMap<String, Uuid>,
 }
 
 impl FileSystem {
@@ -205,6 +205,16 @@ impl FileSystem {
         }
     }
 
+    fn try_cd_by_name(&mut self, name: String) -> Result<(), ()> {
+        self.names
+            .get(&name)
+            .and_then(|id| {
+                self.cwd = Some(*id);
+                Some(())
+            })
+            .ok_or(())
+    }
+
     fn add(&mut self, loc: Location) {
         match loc {
             Location::Dir(id, ref dir) => {
@@ -218,8 +228,8 @@ impl FileSystem {
         }
     }
 
-    fn get(&self, id: Uuid) -> Option<&Location> {
-        self.locs.get(&id)
+    fn get(&self, id: &Uuid) -> Option<&Location> {
+        self.locs.get(id)
     }
 
     fn get_mut(&mut self, id: Uuid) -> Option<&mut Location> {
@@ -238,61 +248,66 @@ impl FileSystem {
 #[aoc_generator(day7)]
 pub fn input_generator(input: &str) -> FileSystem {
     let mut fs = FileSystem::new();
+    // let mut full_path = vec![];
 
     for line in input.lines() {
         let mut words = line.split_whitespace().peekable();
 
-        // command
-        //
-        // $ cd <dir>, $ cd ..
-        // $ ls
-        // dir <dir>  -  the current dir has a dir named <dir>
-        // <size> <name> - the current dir has a file named <name> with size <size>
+        /*
+         * parse command from line
+         *      $ cd <dir>, $ cd ..
+         *      $ ls
+         */
         if let Some(&"$") = words.peek() {
             let _ = words.next();
 
             match words.next() {
                 Some("cd") => {
                     match words.next() {
+                        // go up
                         Some("..") => {
-                            // go up
-                            let curr = fs.get(fs.cwd.unwrap()).expect("Unknown parent location");
-
-                            fs.cd(Some(&loc_id(&curr))).ok();
+                            if let Some(Location::Dir(_, dir)) = fs.get(&fs.cwd.unwrap()) {
+                                fs.cd(Some(&dir.parent_id.unwrap())).ok();
+                            }
                         }
-                        Some(name) => {
-                            // fs.try_cd_by_name(name.to_string()).or_else(|_| {
 
-                            // })
-                            // help me
-                            match fs.get_by_name(name.to_string()) {
-                                Some(Location::Dir(id, _)) => {
-                                    // fs.cd(Some(id));
-                                    // TODO: change directory without multiple references to fs?
-                                }
-                                Some(Location::File(_, _)) => panic!("Cannot `cd` into a file"),
-                                _ => {
+                        // cd into dir (and create it if not pre-existing)
+                        Some(name) => {
+                            fs.try_cd_by_name(name.to_string())
+                                .map_err(|r| {
                                     let id = Uuid::new_v4();
                                     let dir = DirectoryRecord::new(id, name, fs.cwd);
                                     let dir_loc = Location::Dir(id, dir);
 
                                     fs.add(dir_loc);
                                     fs.cd(Some(&id)).ok();
-                                }
-                            }
+                                })
+                                .ok();
                         }
+
                         None => panic!("Expected directory name to `cd` into"),
                     }
                 }
-                Some("ls") => {}
+
+                // list cwd contents
+                Some("ls") => {
+                    // do nothing
+                }
+
+                // unrecognized cmd
                 Some(cmd) => panic!("{}", format!("Unrecognized command, '{}'!", cmd)),
+
+                // unexpected end of input
                 _ => panic!("Invalid input line"),
             }
 
             continue;
         }
 
-        // there's a dir
+        /*
+         * cwd contains a directory with the specified name
+         *      dir <dir>
+         */
         if let Some(&"dir") = words.peek() {
             let _ = words.next();
 
@@ -311,7 +326,10 @@ pub fn input_generator(input: &str) -> FileSystem {
             continue;
         }
 
-        // there's a file
+        /*
+         * cwd has a file with the specified name and size
+         *      <size> <name>
+         */
         if let Some(_) = words.peek() {
             let size = words
                 .next()
@@ -342,12 +360,24 @@ pub fn input_generator(input: &str) -> FileSystem {
 }
 
 #[aoc(day7, part1)]
-pub fn part1(input: &FileSystem) -> usize {
-    0
+pub fn part1(fs: &FileSystem) -> usize {
+    let mut total_size = 0;
+
+    for (id, loc) in fs.locs.iter() {
+        if let Location::Dir(_, dir) = loc {
+            let size = file_size(fs, &id);
+
+            if size <= 100000 {
+                total_size += size;
+            }
+        }
+    }
+
+    total_size
 }
 
 #[aoc(day7, part2)]
-pub fn part2(input: &FileSystem) -> usize {
+pub fn part2(fs: &FileSystem) -> usize {
     0
 }
 
@@ -383,13 +413,41 @@ $ ls
         let fs = input_generator(input);
         println!("{:#?}", fs);
         assert_eq!(fs.locs.len(), 14);
-        // assert_eq!(root.file_size(), 48381165);
+        if let Location::Dir(id, _) = fs.get_by_name("/".to_string()).unwrap() {
+            assert_eq!(file_size(&fs, id), 48381165);
+            // assert_eq!(true, false);
+        } else {
+            panic!("Could not locate root dir");
+        }
     }
 
     #[test]
     fn sample1() {
-        let input = "";
-        assert_eq!(part1(&input_generator(input)), 0);
+        let input = "$ cd /
+$ ls
+dir a
+14848514 b.txt
+8504156 c.dat
+dir d
+$ cd a
+$ ls
+dir e
+29116 f
+2557 g
+62596 h.lst
+$ cd e
+$ ls
+584 i
+$ cd ..
+$ cd ..
+$ cd d
+$ ls
+4060174 j
+8033020 d.log
+5626152 d.ext
+7214296 k";
+        let fs = input_generator(input);
+        assert_eq!(part1(&fs), 95437);
     }
 
     #[test]
