@@ -455,12 +455,11 @@ $ ls
 5626152 d.ext
 7214296 k";
         let fs = input_generator(input);
-        // println!("{:?}", fs);
+
         assert_eq!(fs.entries.len(), 14);
-        let root = fs
-            .get_by_name("/".to_string())
-            .expect("Could not find root dir");
-        assert_eq!(file_size(root), 48381165);
+
+        let root = fs.get_root().expect("Could not find root dir");
+        assert_eq!(file_size(&root), 48381165);
     }
 
     #[test]
