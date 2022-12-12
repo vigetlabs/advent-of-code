@@ -236,16 +236,6 @@ impl FileSystem {
 
         self.entries.insert(entry.borrow().id, entry.clone());
     }
-
-    pub fn get_by_name(&self, name: String) -> Option<&Rc<RefCell<Entry>>> {
-        for entry in self.entries.values() {
-            if entry.borrow().name == name {
-                return Some(entry);
-            }
-        }
-
-        None
-    }
 }
 
 pub fn file_size_entry(entry: &Entry) -> usize {
