@@ -153,6 +153,14 @@ impl Entry {
             children: vec![],
         }
     }
+
+    fn is_file(&self) -> bool {
+        self.kind == EntryKind::File
+    }
+
+    fn is_dir(&self) -> bool {
+        self.kind == EntryKind::Dir
+    }
 }
 
 impl Display for Entry {
@@ -201,11 +209,10 @@ impl FileSystem {
     fn cd(&mut self, entry: &Rc<RefCell<Entry>>) {
         let e = entry.borrow();
 
-        match e.kind {
-            EntryKind::Dir => {
-                self.cwd = Some(entry.clone());
-            }
-            _ => panic!("Cannot `cd` into a file"),
+        if e.is_dir() {
+            self.cwd = Some(entry.clone());
+        } else {
+            panic!("Cannot `cd` into a file");
         }
     }
 
@@ -295,9 +302,7 @@ pub fn input_generator(input: &str) -> FileSystem {
                             match current_dir.kind {
                                 EntryKind::Dir => {
                                     for dir in current_dir.children.iter() {
-                                        if dir.borrow().kind == EntryKind::Dir
-                                            && dir.borrow().name == name
-                                        {
+                                        if dir.borrow().is_dir() && dir.borrow().name == name {
                                             fs.cd(dir);
                                             break;
                                         }
@@ -382,7 +387,7 @@ pub fn part1(fs: &FileSystem) -> usize {
     fs.entries
         .values()
         .filter_map(|entry| {
-            if entry.borrow().kind == EntryKind::File {
+            if entry.borrow().is_file() {
                 return None;
             }
 
@@ -408,7 +413,7 @@ pub fn part2(fs: &FileSystem) -> usize {
     fs.entries
         .values()
         .filter_map(|entry| {
-            if entry.borrow().kind == EntryKind::File {
+            if entry.borrow().is_file() {
                 return None;
             }
 
