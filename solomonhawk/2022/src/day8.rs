@@ -64,116 +64,46 @@ This tree's scenic score is 8 (2 * 2 * 1 * 2); this is the ideal spot for the tr
 Consider each tree on your map. What is the highest scenic score possible for any tree?
 */
 
-const W: u8 = 4;
-const S: u8 = 8;
-const E: u8 = 12;
-const N: u8 = 16;
+const BITS: u8 = 6;
 
+const W: u8 = BITS * 1;
+const S: u8 = BITS * 2;
+const E: u8 = BITS * 3;
+const N: u8 = BITS * 4;
+
+// A packed integer that stores 5 values, 1 base number and 4 additional numbers (up to 15)
+// corresponding to each of the 4 cardinal directions. The layout is:
+//
+// NNNNNNNNEEEEEEEESSSSSSSSWWWWWWWWXXXXXXXX, where X's are the base number
 type Packed = usize;
 
+#[derive(Clone)]
 pub struct Patch {
     width: usize,
     height: usize,
-    data: Vec<Vec<Packed>>,
+    data: Vec<Vec<usize>>,
 }
 
 #[aoc_generator(day8)]
 pub fn input_generator(input: &str) -> Patch {
-    let mut data: Vec<Vec<Packed>> = input
+    let data: Vec<Vec<Packed>> = input
         .lines()
         .map(|l| l.as_bytes().iter().map(|b| (b - 48) as usize).collect())
         .collect();
 
-    let width = data[0].len();
-    let height = data.len();
-
-    for y in 0..height {
-        let mut max_x = 0;
-
-        // forwards x pass for this row
-        for x in 0..width {
-            if x > 0 {
-                max_x = max_x.max(v(data[y][x - 1]));
-            }
-
-            data[y][x] |= max_x << W;
-        }
-
-        max_x = 0;
-
-        // backwards x pass for this row
-        for xx in 0..width {
-            let x = width - xx - 1;
-
-            if x + 1 < width {
-                max_x = max_x.max(v(data[y][x + 1]));
-            }
-
-            data[y][x] |= max_x << E;
-        }
-    }
-
-    for x in 0..width {
-        let mut max_y = 0;
-
-        // forwards y pass for this column
-        for y in 0..height {
-            if y > 0 {
-                max_y = max_y.max(v(data[y - 1][x]));
-            }
-
-            data[y][x] |= max_y << N;
-        }
-
-        max_y = 0;
-
-        // backwards y pass for this column
-        for yy in 0..height {
-            let y = height - yy - 1;
-
-            if y + 1 < height {
-                max_y = max_y.max(v(data[y + 1][x]));
-            }
-
-            data[y][x] |= max_y << S;
-        }
-    }
-
     Patch {
-        width,
-        height,
+        width: data[0].len(),
+        height: data.len(),
         data,
     }
 }
 
-fn v(n: Packed) -> usize {
-    n & 0b1111
-}
-
-fn w(n: Packed) -> usize {
-    n >> W & 0b1111
-}
-
-fn s(n: Packed) -> usize {
-    n >> S & 0b1111
-}
-
-fn e(n: Packed) -> usize {
-    n >> E & 0b1111
-}
-
-fn n(n: Packed) -> usize {
-    n >> N & 0b1111
-}
-
-fn is_visible(x: usize, y: usize, width: usize, height: usize, t: Packed) -> bool {
-    let val = v(t);
-    let on_edge = x == 0 || y == 0 || x == width - 1 || y == height - 1;
-    on_edge || val > e(t) || val > w(t) || val > n(t) || val > s(t)
-}
-
 #[aoc(day8, part1)]
 pub fn part1(patch: &Patch) -> usize {
+    let mut patch = patch.clone();
+
+    calculate_visibility(&mut patch);
+
     patch
         .data
         .iter()
@@ -188,7 +118,170 @@ pub fn part1(patch: &Patch) -> usize {
 
 #[aoc(day8, part2)]
 pub fn part2(patch: &Patch) -> usize {
-    0
+    let mut patch = patch.clone();
+
+    calculate_view_distance(&mut patch);
+
+    patch
+        .data
+        .iter()
+        .flat_map(|r| r.iter().map(|&t| view_distance(t)))
+        .max()
+        .expect("Could not find a max value")
+}
+
+fn base(n: Packed) -> usize {
+    n & (1 << W) - 1
+}
+
+fn west(n: Packed) -> usize {
+    n >> W & (1 << W) - 1
+}
+
+fn south(n: Packed) -> usize {
+    n >> S & (1 << W) - 1
+}
+
+fn east(n: Packed) -> usize {
+    n >> E & (1 << W) - 1
+}
+
+fn north(n: Packed) -> usize {
+    n >> N & (1 << W) - 1
+}
+
+fn is_visible(x: usize, y: usize, width: usize, height: usize, t: Packed) -> bool {
+    let val = base(t);
+    let on_edge = x == 0 || y == 0 || x == width - 1 || y == height - 1;
+    let can_be_seen = val > east(t) || val > west(t) || val > north(t) || val > south(t);
+
+    on_edge || can_be_seen
+}
+
+fn view_distance(t: Packed) -> usize {
+    north(t) * east(t) * south(t) * west(t)
+}
+
+fn calculate_visibility(patch: &mut Patch) {
+    let height = patch.height;
+    let width = patch.width;
+    let data = &mut patch.data;
+
+    for y in 0..height {
+        let mut max_x = 0;
+
+        // forwards x pass for this row
+        for x in 0..width {
+            if x > 0 {
+                max_x = max_x.max(base(data[y][x - 1]));
+            }
+
+            data[y][x] |= max_x << W;
+        }
+
+        max_x = 0;
+
+        // backwards x pass for this row
+        for xx in 0..width {
+            let x = width - xx - 1;
+
+            if x + 1 < width {
+                max_x = max_x.max(base(data[y][x + 1]));
+            }
+
+            data[y][x] |= max_x << E;
+        }
+    }
+
+    for x in 0..width {
+        let mut max_y = 0;
+
+        // forwards y pass for this column
+        for y in 0..height {
+            if y > 0 {
+                max_y = max_y.max(base(data[y - 1][x]));
+            }
+
+            data[y][x] |= max_y << N;
+        }
+
+        max_y = 0;
+
+        // backwards y pass for this column
+        for yy in 0..height {
+            let y = height - yy - 1;
+
+            if y + 1 < height {
+                max_y = max_y.max(base(data[y + 1][x]));
+            }
+
+            data[y][x] |= max_y << S;
+        }
+    }
+}
+
+fn calculate_view_distance(patch: &mut Patch) {
+    let height = patch.height;
+    let width = patch.width;
+    let data = &mut patch.data;
+
+    for y in 0..height {
+        for x in 0..width {
+            let value = base(data[y][x]);
+
+            // look north
+            if y > 0 {
+                let mut dist = 1;
+                let mut yy = y - 1;
+
+                while value > base(data[yy][x]) && yy > 0 {
+                    dist += 1;
+                    yy -= 1;
+                }
+
+                data[y][x] |= dist << N;
+            }
+
+            // look east
+            if x < width - 1 {
+                let mut dist = 1;
+                let mut xx = x + 1;
+
+                while value > base(data[y][xx]) && xx < width - 1 {
+                    dist += 1;
+                    xx += 1;
+                }
+
+                data[y][x] |= dist << E;
+            }
+
+            // look south
+            if y < height - 1 {
+                let mut dist = 1;
+                let mut yy = y + 1;
+
+                while value > base(data[yy][x]) && yy < height - 1 {
+                    dist += 1;
+                    yy += 1;
+                }
+
+                data[y][x] |= dist << S;
+            }
+
+            // look west
+            if x > 0 {
+                let mut dist = 1;
+                let mut xx = x - 1;
+
+                while value > base(data[y][xx]) && xx > 0 {
+                    dist += 1;
+                    xx -= 1;
+                }
+
+                data[y][x] |= dist << W;
+            }
+        }
+    }
 }
 
 #[cfg(test)]
@@ -230,7 +323,7 @@ mod tests {
 65332
 33549
 35390";
-
-        assert_eq!(part2(&input_generator(input)), 0);
+        assert_eq!(0b111111, (1 << 6) - 1);
+        assert_eq!(part2(&input_generator(input)), 8);
     }
 }
