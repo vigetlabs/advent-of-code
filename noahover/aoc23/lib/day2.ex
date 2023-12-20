@@ -68,4 +68,50 @@ defmodule Day2 do
   defp id_if_possible_loop(id, [_head | tail]) do
     id_if_possible_loop(id, tail)
   end
+
+  @doc """
+  Day 2 Part 1
+
+  Sum the power of the minimum blue, green, and red
+  needed to make the game possible
+  """
+  def sum_game_powers(games) do
+    games
+    |> Enum.map(fn x -> game_power(x) end)
+    |> Enum.sum()
+  end
+
+  def game_power(%{rounds: rounds}) do
+    rounds
+    |> Enum.reduce(%{blue: 0, green: 0, red: 0}, fn round, %{blue: mb, green: mg, red: mr} ->
+      rb = Map.get(round, :blue, 0)
+      rg = Map.get(round, :green, 0)
+      rr = Map.get(round, :red, 0)
+
+      nb =
+        if rb > mb do
+          rb
+        else
+          mb
+        end
+
+      ng =
+        if rg > mg do
+          rg
+        else
+          mg
+        end
+
+      nr =
+        if rr > mr do
+          rr
+        else
+          mr
+        end
+
+      %{blue: nb, green: ng, red: nr}
+    end)
+    |> Map.values()
+    |> Enum.product()
+  end
 end
